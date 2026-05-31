@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { CONFIG } from '@/lib/config'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -149,6 +150,7 @@ export default function NewCVPage() {
   const [authLoading, setAuthLoading] = useState(true)
   const [saving, setSaving]           = useState(false)
   const [saveError, setSaveError]     = useState('')
+  const [limitReached, setLimitReached] = useState(false)
   const [highlighted, setHighlighted] = useState('')
 
   // Form state
@@ -263,10 +265,8 @@ export default function NewCVPage() {
     }
 
     setSaveError('')
+    setLimitReached(false)
     setSaving(true)
-
-    const { data: { user }, error: userErr } = await supabase.auth.getUser()
-    if (!user || userErr) { router.push('/login'); return }
 
     const content = {
       personal,
@@ -276,13 +276,18 @@ export default function NewCVPage() {
       activities: activities.filter(a => a.description),
     }
 
-    const { error: dbErr } = await supabase.from('cvs').insert({
-      title: title.trim(), content, user_id: user.id,
+    const res = await fetch('/api/cvs/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: title.trim(), content }),
     })
+    const json = await res.json()
+    setSaving(false)
 
-    if (dbErr) {
-      setSaveError(dbErr.message)
-      setSaving(false)
+    if (!res.ok) {
+      if (res.status === 401) { router.push('/login'); return }
+      if (json.error === 'free_limit_reached') { setLimitReached(true); return }
+      setSaveError(json.error ?? 'Lưu CV thất bại.')
       return
     }
 
@@ -503,7 +508,15 @@ export default function NewCVPage() {
           </div>
         </section>
 
-        {/* ── Save error (Supabase) ── */}
+        {/* ── Save error ── */}
+        {limitReached && (
+          <div className="text-orange-300 text-sm bg-orange-950/50 border border-orange-800 px-4 py-3 rounded-lg mb-4">
+            Bạn đã đạt giới hạn {CONFIG.freeCvLimit} CV của gói Free.{' '}
+            <a href="/upgrade" className="underline font-semibold hover:text-orange-200 transition-colors">
+              Nâng cấp Pro →
+            </a>
+          </div>
+        )}
         {saveError && (
           <div className="text-red-400 text-sm bg-red-950/40 px-4 py-3 rounded-lg mb-4">
             {saveError}

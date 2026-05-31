@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { pdf } from '@react-pdf/renderer'
 import CvPdfTemplate from '@/components/CvPdfTemplate'
+import { getUserPlan, type UserPlan } from '@/lib/user-plan'
+import { CONFIG } from '@/lib/config'
 
   interface CV {
     id: string
@@ -92,6 +94,30 @@ import CvPdfTemplate from '@/components/CvPdfTemplate'
     )
   }
 
+  function PlanBadge({ plan }: { plan: UserPlan }) {
+    if (plan.plan === 'free') {
+      return (
+        <a href="/orders/me" className="text-xs font-medium bg-zinc-800 text-zinc-400 px-2.5 py-1 rounded-full hover:bg-zinc-700 transition-colors">
+          Gói Free
+        </a>
+      )
+    }
+    if (plan.isPro && plan.pro_expires_at) {
+      const days = Math.floor((new Date(plan.pro_expires_at).getTime() - Date.now()) / 86_400_000)
+      return (
+        <a href="/orders/me" className="text-xs font-medium bg-blue-900/60 text-blue-300 border border-blue-700 px-2.5 py-1 rounded-full hover:bg-blue-900 transition-colors">
+          Pro · còn {days} ngày
+        </a>
+      )
+    }
+    // plan === 'pro' nhưng đã hết hạn
+    return (
+      <a href="/upgrade" className="text-xs font-medium bg-orange-950/60 text-orange-300 border border-orange-700 px-2.5 py-1 rounded-full hover:bg-orange-950 transition-colors">
+        Pro đã hết hạn — Gia hạn
+      </a>
+    )
+  }
+
   function DashboardContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
@@ -101,6 +127,7 @@ import CvPdfTemplate from '@/components/CvPdfTemplate'
     const [cvs, setCvs] = useState<CV[]>([])
     const [cvsLoading, setCvsLoading] = useState(true)
     const [success, setSuccess] = useState(false)
+    const [planInfo, setPlanInfo] = useState<UserPlan | null>(null)
 
     useEffect(() => {
       if (searchParams.get('success') === '1') {
@@ -119,13 +146,17 @@ import CvPdfTemplate from '@/components/CvPdfTemplate'
         setEmail(session.user.email ?? null)
         setAuthLoading(false)
 
-        const { data } = await supabase
-          .from('cvs')
-          .select('id, title, created_at')
-          .eq('user_id', session.user.id)
-          .order('created_at', { ascending: false })
+        const [{ data }, plan] = await Promise.all([
+          supabase
+            .from('cvs')
+            .select('id, title, created_at')
+            .eq('user_id', session.user.id)
+            .order('created_at', { ascending: false }),
+          getUserPlan(supabase, session.user.id),
+        ])
 
         setCvs(data ?? [])
+        setPlanInfo(plan)
         setCvsLoading(false)
       })
     }, [router])
@@ -162,6 +193,7 @@ import CvPdfTemplate from '@/components/CvPdfTemplate'
               <p className="text-white font-semibold">{email}</p>
             </div>
             <div className="flex items-center gap-3">
+              {planInfo && <PlanBadge plan={planInfo} />}
               <a
                 href="/feedback?from=dashboard"
                 className="text-zinc-500 hover:text-zinc-300 text-sm transition-colors"
@@ -174,37 +206,51 @@ import CvPdfTemplate from '@/components/CvPdfTemplate'
             </div>
           </div>
 
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-white text-lg font-bold">CV của tôi</h1>
-            <button
-              onClick={() => router.push('/cv/new')}
-              className="bg-white text-black text-sm font-semibold px-4 py-2
-  rounded-lg hover:bg-zinc-200 transition-colors"
-            >
-              + Tạo CV mới
-            </button>
-          </div>
+          {(() => {
+            const atLimit = !planInfo?.isPro && cvs.length >= CONFIG.freeCvLimit
+            const newCvDest = atLimit ? '/upgrade' : '/cv/new'
+            return (
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <h1 className="text-white text-lg font-bold">CV của tôi</h1>
+                  <button
+                    onClick={() => router.push(newCvDest)}
+                    className="bg-white text-black text-sm font-semibold px-4 py-2 rounded-lg hover:bg-zinc-200 transition-colors"
+                  >
+                    + {atLimit ? 'Tạo CV mới (cần Pro)' : 'Tạo CV mới'}
+                  </button>
+                </div>
 
-          {cvsLoading ? (
-            <p className="text-zinc-500 text-sm py-8 text-center">Đang
-  tải...</p>
-          ) : cvs.length === 0 ? (
-            <div className="text-center py-16">
-              <p className="text-zinc-400 mb-4">Bạn chưa có CV nào. Tạo CV đầu
-  tiên!</p>
-              <button
-                onClick={() => router.push('/cv/new')}
-                className="bg-white text-black text-sm font-semibold px-6 py-2.5
-  rounded-lg hover:bg-zinc-200 transition-colors"
-              >
-                + Tạo CV mới
-              </button>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-3">
-              {cvs.map((cv) => <CVCard key={cv.id} cv={cv} />)}
-            </div>
-          )}
+                {atLimit && (
+                  <div className="bg-orange-950/50 border border-orange-700 text-orange-300 text-sm px-4 py-3 rounded-xl mb-4">
+                    Bạn đã đạt giới hạn {CONFIG.freeCvLimit} CV của gói Free.{' '}
+                    <a href="/upgrade" className="underline font-semibold hover:text-orange-200 transition-colors">
+                      Nâng cấp Pro
+                    </a>{' '}
+                    để tạo không giới hạn.
+                  </div>
+                )}
+
+                {cvsLoading ? (
+                  <p className="text-zinc-500 text-sm py-8 text-center">Đang tải...</p>
+                ) : cvs.length === 0 ? (
+                  <div className="text-center py-16">
+                    <p className="text-zinc-400 mb-4">Bạn chưa có CV nào. Tạo CV đầu tiên!</p>
+                    <button
+                      onClick={() => router.push('/cv/new')}
+                      className="bg-white text-black text-sm font-semibold px-6 py-2.5 rounded-lg hover:bg-zinc-200 transition-colors"
+                    >
+                      + Tạo CV mới
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-3">
+                    {cvs.map((cv) => <CVCard key={cv.id} cv={cv} />)}
+                  </div>
+                )}
+              </>
+            )
+          })()}
         </div>
       </div>
     )
