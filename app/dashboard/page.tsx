@@ -1,51 +1,163 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
-export default function DashboardPage() {
-  const router = useRouter()
-  const [email, setEmail] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        router.push('/login')
-      } else {
-        setEmail(session.user.email ?? null)
-        setLoading(false)
-      }
-    })
-  }, [router])
-
-  async function handleLogout() {
-    await supabase.auth.signOut()
-    router.push('/login')
+  interface CV {
+    id: string
+    title: string
+    created_at: string
   }
 
-  if (loading) {
+  function formatDate(iso: string) {
+    return new Date(iso).toLocaleDateString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    })
+  }
+
+  function CVCard({ cv }: { cv: CV }) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <p className="text-zinc-500">Đang tải...</p>
+      <div className="bg-zinc-900 rounded-xl px-5 py-4 flex items-center 
+  justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-white font-medium truncate">{cv.title}</p>
+          <p className="text-zinc-500 text-sm mt-0.5">Tạo lúc
+  {formatDate(cv.created_at)}</p>
+        </div>
+        <button
+          type="button"
+          className="shrink-0 text-sm text-zinc-400 hover:text-white border 
+  border-zinc-700 hover:border-zinc-500 px-4 py-1.5 rounded-lg 
+  transition-colors"
+        >
+          Xem
+        </button>
       </div>
     )
   }
 
-  return (
-    <div className="min-h-screen bg-black flex items-center justify-center">
-      <div className="text-center">
-        <p className="text-white text-2xl font-bold mb-6">
-          Xin chào, {email}
-        </p>
-        <button
-          onClick={handleLogout}
-          className="bg-white text-black font-semibold px-6 py-2.5 rounded-lg hover:bg-zinc-200 transition-colors"
-        >
-          Đăng xuất
-        </button>
+  function DashboardContent() {
+    const router = useRouter()
+    const searchParams = useSearchParams()
+
+    const [email, setEmail] = useState<string | null>(null)
+    const [authLoading, setAuthLoading] = useState(true)
+    const [cvs, setCvs] = useState<CV[]>([])
+    const [cvsLoading, setCvsLoading] = useState(true)
+    const [success, setSuccess] = useState(false)
+
+    useEffect(() => {
+      if (searchParams.get('success') === '1') {
+        setSuccess(true)
+        window.history.replaceState(null, '', '/dashboard')
+      }
+    }, [searchParams])
+
+    useEffect(() => {
+      supabase.auth.getSession().then(async ({ data: { session } }) => {
+        if (!session) {
+          router.push('/login')
+          return
+        }
+
+        setEmail(session.user.email ?? null)
+        setAuthLoading(false)
+
+        const { data } = await supabase
+          .from('cvs')
+          .select('id, title, created_at')
+          .eq('user_id', session.user.id)
+          .order('created_at', { ascending: false })
+
+        setCvs(data ?? [])
+        setCvsLoading(false)
+      })
+    }, [router])
+
+    async function handleLogout() {
+      await supabase.auth.signOut()
+      router.push('/login')
+    }
+
+    if (authLoading) {
+      return (
+        <div className="min-h-screen bg-black flex items-center justify-center">
+          <p className="text-zinc-500">Đang tải...</p>
+        </div>
+      )
+    }
+
+    return (
+      <div className="min-h-screen bg-black py-10 px-4">
+        {success && (
+          <div className="fixed top-6 left-1/2 -translate-x-1/2 bg-green-900/80
+  border border-green-700 text-green-300 text-sm px-5 py-3 rounded-xl flex
+  items-center gap-3 shadow-lg z-10">
+            <span>✓ Lưu CV thành công!</span>
+            <button onClick={() => setSuccess(false)} className="text-green-500
+  hover:text-green-200 leading-none">×</button>
+          </div>
+        )}
+  
+        <div className="max-w-2xl mx-auto">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <p className="text-zinc-500 text-sm">Xin chào,</p>
+              <p className="text-white font-semibold">{email}</p>
+            </div>
+            <button onClick={handleLogout} className="text-zinc-500
+  hover:text-white text-sm transition-colors">
+              Đăng xuất
+            </button>
+          </div>
+
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-white text-lg font-bold">CV của tôi</h1>
+            <button
+              onClick={() => router.push('/cv/new')}
+              className="bg-white text-black text-sm font-semibold px-4 py-2
+  rounded-lg hover:bg-zinc-200 transition-colors"
+            >
+              + Tạo CV mới
+            </button>
+          </div>
+
+          {cvsLoading ? (
+            <p className="text-zinc-500 text-sm py-8 text-center">Đang
+  tải...</p>
+          ) : cvs.length === 0 ? (
+            <div className="text-center py-16">
+              <p className="text-zinc-400 mb-4">Bạn chưa có CV nào. Tạo CV đầu
+  tiên!</p>
+              <button
+                onClick={() => router.push('/cv/new')}
+                className="bg-white text-black text-sm font-semibold px-6 py-2.5
+  rounded-lg hover:bg-zinc-200 transition-colors"
+              >
+                + Tạo CV mới
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {cvs.map((cv) => <CVCard key={cv.id} cv={cv} />)}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-  )
-}
+    )
+  }
+  
+  export default function DashboardPage() {
+    return (
+      <Suspense fallback={
+        <div className="min-h-screen bg-black flex items-center justify-center">
+          <p className="text-zinc-500">Đang tải...</p>
+        </div>
+      }>
+        <DashboardContent />
+      </Suspense>
+    )
+  }
