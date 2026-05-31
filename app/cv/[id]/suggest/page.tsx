@@ -35,6 +35,13 @@ export default function SuggestPage() {
   const [error, setError] = useState<string | null>(null)
   const [cvData, setCvData] = useState<CvData | null>(null)
   const [downloading, setDownloading] = useState(false)
+  const [pdfToast, setPdfToast] = useState(false)
+
+  useEffect(() => {
+    if (!pdfToast) return
+    const t = setTimeout(() => setPdfToast(false), 8000)
+    return () => clearTimeout(t)
+  }, [pdfToast])
 
   useEffect(() => {
     async function run() {
@@ -104,6 +111,7 @@ export default function SuggestPage() {
       a.download = `CV_${cvData.title.replace(/\s+/g, '_')}.pdf`
       a.click()
       URL.revokeObjectURL(url)
+      setPdfToast(true)
     } finally {
       setDownloading(false)
     }
@@ -138,6 +146,16 @@ export default function SuggestPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4">
+      {pdfToast && (
+        <div className="fixed bottom-6 right-6 z-50 bg-zinc-800 border border-zinc-700 text-zinc-200 text-sm px-4 py-3 rounded-xl flex items-center gap-3 shadow-xl">
+          <span>✓ Đã tải PDF</span>
+          <span className="text-zinc-500">—</span>
+          <a href="/feedback?from=pdf_export" className="text-blue-400 hover:text-blue-300 underline underline-offset-2 transition-colors">
+            Góp ý
+          </a>
+          <button onClick={() => setPdfToast(false)} className="text-zinc-500 hover:text-zinc-200 ml-1 leading-none">×</button>
+        </div>
+      )}
       <div className="max-w-2xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-800">Gợi ý chuyên ngành</h1>
@@ -174,6 +192,18 @@ export default function SuggestPage() {
             </div>
           ))}
         </div>
+
+        {suggestions.length > 0 && (
+          <div className="text-center text-sm text-gray-400 pt-2">
+            Gợi ý có hữu ích không?{' '}
+            <a
+              href="/feedback?from=ai_suggestion"
+              className="text-blue-500 hover:text-blue-600 transition-colors"
+            >
+              Cho tụi mình biết →
+            </a>
+          </div>
+        )}
       </div>
     </div>
   )

@@ -23,6 +23,13 @@ import CvPdfTemplate from '@/components/CvPdfTemplate'
   function CVCard({ cv }: { cv: CV }) {
     const router = useRouter()
     const [downloading, setDownloading] = useState(false)
+    const [pdfToast, setPdfToast] = useState(false)
+
+    useEffect(() => {
+      if (!pdfToast) return
+      const t = setTimeout(() => setPdfToast(false), 8000)
+      return () => clearTimeout(t)
+    }, [pdfToast])
 
     async function handleDownloadPdf() {
       setDownloading(true)
@@ -40,12 +47,24 @@ import CvPdfTemplate from '@/components/CvPdfTemplate'
         a.download = `CV_${data.title.replace(/\s+/g, '_')}.pdf`
         a.click()
         URL.revokeObjectURL(url)
+        setPdfToast(true)
       } finally {
         setDownloading(false)
       }
     }
 
     return (
+      <>
+      {pdfToast && (
+        <div className="fixed bottom-6 right-6 z-50 bg-zinc-800 border border-zinc-700 text-zinc-200 text-sm px-4 py-3 rounded-xl flex items-center gap-3 shadow-xl">
+          <span>✓ Đã tải PDF</span>
+          <span className="text-zinc-500">—</span>
+          <a href="/feedback?from=pdf_export" className="text-blue-400 hover:text-blue-300 underline underline-offset-2 transition-colors">
+            Góp ý
+          </a>
+          <button onClick={() => setPdfToast(false)} className="text-zinc-500 hover:text-zinc-200 ml-1 leading-none">×</button>
+        </div>
+      )}
       <div className="bg-zinc-900 rounded-xl px-5 py-4 flex items-center justify-between gap-4">
         <div className="min-w-0">
           <p className="text-white font-medium truncate">{cv.title}</p>
@@ -69,6 +88,7 @@ import CvPdfTemplate from '@/components/CvPdfTemplate'
           </button>
         </div>
       </div>
+      </>
     )
   }
 
@@ -141,10 +161,17 @@ import CvPdfTemplate from '@/components/CvPdfTemplate'
               <p className="text-zinc-500 text-sm">Xin chào,</p>
               <p className="text-white font-semibold">{email}</p>
             </div>
-            <button onClick={handleLogout} className="text-zinc-500
-  hover:text-white text-sm transition-colors">
-              Đăng xuất
-            </button>
+            <div className="flex items-center gap-3">
+              <a
+                href="/feedback?from=dashboard"
+                className="text-zinc-500 hover:text-zinc-300 text-sm transition-colors"
+              >
+                💬 Góp ý
+              </a>
+              <button onClick={handleLogout} className="text-zinc-500 hover:text-white text-sm transition-colors">
+                Đăng xuất
+              </button>
+            </div>
           </div>
 
           <div className="flex items-center justify-between mb-4">
