@@ -1,3 +1,5 @@
+import { CONFIG } from '@/lib/config' // temp: trigger console.log in lib/config.ts
+
 export default function Home() {
   return (
     <div className="min-h-screen bg-black flex items-center justify-center">
