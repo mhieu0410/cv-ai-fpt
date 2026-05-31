@@ -3,6 +3,8 @@
 import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { pdf } from '@react-pdf/renderer'
+import CvPdfTemplate from '@/components/CvPdfTemplate'
 
   interface CV {
     id: string
@@ -20,31 +22,50 @@ import { supabase } from '@/lib/supabase'
 
   function CVCard({ cv }: { cv: CV }) {
     const router = useRouter()
+    const [downloading, setDownloading] = useState(false)
+
+    async function handleDownloadPdf() {
+      setDownloading(true)
+      try {
+        const { data } = await supabase
+          .from('cvs')
+          .select('title, content')
+          .eq('id', cv.id)
+          .single()
+        if (!data) return
+        const blob = await pdf(<CvPdfTemplate cv={data} />).toBlob()
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `CV_${data.title.replace(/\s+/g, '_')}.pdf`
+        a.click()
+        URL.revokeObjectURL(url)
+      } finally {
+        setDownloading(false)
+      }
+    }
+
     return (
-      <div className="bg-zinc-900 rounded-xl px-5 py-4 flex items-center
-  justify-between gap-4">
+      <div className="bg-zinc-900 rounded-xl px-5 py-4 flex items-center justify-between gap-4">
         <div className="min-w-0">
           <p className="text-white font-medium truncate">{cv.title}</p>
-          <p className="text-zinc-500 text-sm mt-0.5">Tạo lúc
-  {formatDate(cv.created_at)}</p>
+          <p className="text-zinc-500 text-sm mt-0.5">Tạo lúc {formatDate(cv.created_at)}</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
             onClick={() => router.push(`/cv/${cv.id}/suggest`)}
-            className="text-sm text-blue-400 hover:text-blue-200 border
-  border-blue-800 hover:border-blue-500 px-4 py-1.5 rounded-lg
-  transition-colors"
+            className="text-sm text-blue-400 hover:text-blue-200 border border-blue-800 hover:border-blue-500 px-4 py-1.5 rounded-lg transition-colors"
           >
             Gợi ý chuyên ngành
           </button>
           <button
             type="button"
-            className="text-sm text-zinc-400 hover:text-white border
-  border-zinc-700 hover:border-zinc-500 px-4 py-1.5 rounded-lg
-  transition-colors"
+            onClick={handleDownloadPdf}
+            disabled={downloading}
+            className="text-sm text-zinc-400 hover:text-white border border-zinc-700 hover:border-zinc-500 px-4 py-1.5 rounded-lg transition-colors disabled:opacity-50"
           >
-            Xem
+            {downloading ? 'Đang tạo...' : 'Tải PDF'}
           </button>
         </div>
       </div>

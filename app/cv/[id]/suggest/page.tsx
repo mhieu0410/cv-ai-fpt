@@ -3,11 +3,26 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { pdf } from '@react-pdf/renderer'
+import CvPdfTemplate from '@/components/CvPdfTemplate'
 
 interface Suggestion {
   major: string
   score: number
   reason: string
+}
+
+interface CvContent {
+  personal:   { name: string; email: string; phone: string }
+  education:  { school: string; major: string; year: string }[]
+  skills:     string[]
+  projects:   { name: string; description: string }[]
+  activities?: { description: string }[]
+}
+
+interface CvData {
+  title: string
+  content: CvContent
 }
 
 export default function SuggestPage() {
@@ -18,6 +33,8 @@ export default function SuggestPage() {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [cvData, setCvData] = useState<CvData | null>(null)
+  const [downloading, setDownloading] = useState(false)
 
   useEffect(() => {
     async function run() {
@@ -32,7 +49,7 @@ export default function SuggestPage() {
 
       const { data: cv, error: cvError } = await supabase
         .from('cvs')
-        .select('id, user_id, content')
+        .select('id, title, user_id, content')
         .eq('id', cvId)
         .eq('user_id', session.user.id)
         .single()
@@ -42,6 +59,8 @@ export default function SuggestPage() {
         setLoading(false)
         return
       }
+
+      setCvData({ title: cv.title, content: cv.content })
 
       const res = await fetch('/api/suggest', {
         method: 'POST',
@@ -73,6 +92,22 @@ export default function SuggestPage() {
 
     run()
   }, [cvId, router])
+
+  async function handleDownloadPdf() {
+    if (!cvData) return
+    setDownloading(true)
+    try {
+      const blob = await pdf(<CvPdfTemplate cv={cvData} />).toBlob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `CV_${cvData.title.replace(/\s+/g, '_')}.pdf`
+      a.click()
+      URL.revokeObjectURL(url)
+    } finally {
+      setDownloading(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -106,12 +141,21 @@ export default function SuggestPage() {
       <div className="max-w-2xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-800">Gợi ý chuyên ngành</h1>
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="px-4 py-2 text-sm bg-white border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-100 transition"
-          >
-            ← Quay lại dashboard
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleDownloadPdf}
+              disabled={downloading || !cvData}
+              className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+            >
+              {downloading ? 'Đang tạo...' : 'Tải PDF'}
+            </button>
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="px-4 py-2 text-sm bg-white border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-100 transition"
+            >
+              ← Quay lại dashboard
+            </button>
+          </div>
         </div>
 
         <div className="space-y-4">
