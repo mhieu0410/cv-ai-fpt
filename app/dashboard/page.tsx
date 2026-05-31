@@ -19,22 +19,34 @@ import { supabase } from '@/lib/supabase'
   }
 
   function CVCard({ cv }: { cv: CV }) {
+    const router = useRouter()
     return (
-      <div className="bg-zinc-900 rounded-xl px-5 py-4 flex items-center 
+      <div className="bg-zinc-900 rounded-xl px-5 py-4 flex items-center
   justify-between gap-4">
         <div className="min-w-0">
           <p className="text-white font-medium truncate">{cv.title}</p>
           <p className="text-zinc-500 text-sm mt-0.5">Tạo lúc
   {formatDate(cv.created_at)}</p>
         </div>
-        <button
-          type="button"
-          className="shrink-0 text-sm text-zinc-400 hover:text-white border 
-  border-zinc-700 hover:border-zinc-500 px-4 py-1.5 rounded-lg 
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => router.push(`/cv/${cv.id}/suggest`)}
+            className="text-sm text-blue-400 hover:text-blue-200 border
+  border-blue-800 hover:border-blue-500 px-4 py-1.5 rounded-lg
   transition-colors"
-        >
-          Xem
-        </button>
+          >
+            Gợi ý chuyên ngành
+          </button>
+          <button
+            type="button"
+            className="text-sm text-zinc-400 hover:text-white border
+  border-zinc-700 hover:border-zinc-500 px-4 py-1.5 rounded-lg
+  transition-colors"
+          >
+            Xem
+          </button>
+        </div>
       </div>
     )
   }
