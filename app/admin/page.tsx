@@ -113,7 +113,7 @@ export default async function AdminPage() {
               <p className="text-zinc-400 text-sm px-5 py-4">Chưa có đơn nào.</p>
             )}
             {recentOrders?.map((o) => {
-              const profile = o.profiles as { email: string } | null
+              const profile = o.profiles as unknown as { email: string } | null
               const st = STATUS_LABEL[o.status] ?? { label: o.status, cls: 'text-zinc-600 bg-zinc-100' }
               return (
                 <div key={o.order_code} className="px-5 py-3 flex items-center justify-between gap-3">
