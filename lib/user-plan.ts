@@ -16,20 +16,26 @@ export async function getUserPlan(
   supabase: SupabaseClient,
   userId: string
 ): Promise<UserPlan> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('profiles')
     .select('plan, pro_expires_at')
     .eq('id', userId)
     .single()
 
-  if (!data) {
+  // In ra màn hình console để debug chính xác dữ liệu nhận được ở Client là gì
+  console.log('Debug getUserPlan nhận từ DB:', { data, error })
+
+  if (error || !data) {
+    // Nếu có lỗi (ví dụ nghẽn RLS), fallback về free
     return { plan: 'free', pro_expires_at: null, isPro: false }
   }
 
-  const isPro =
-    data.plan === 'pro' &&
-    data.pro_expires_at !== null &&
-    new Date(data.pro_expires_at) > new Date()
+  // Đảm bảo parse ngày tháng an toàn chống lệch múi giờ
+  const expireTime = data.pro_expires_at ? new Date(data.pro_expires_at).getTime() : 0
+  const currentTime = Date.now()
+
+  // Điều kiện Pro: plan là 'pro' VÀ thời gian hết hạn phải lớn hơn thời gian hiện tại
+  const isPro = data.plan === 'pro' && expireTime > currentTime
 
   return {
     plan: data.plan as 'free' | 'pro',
