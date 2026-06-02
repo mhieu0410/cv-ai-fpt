@@ -127,12 +127,18 @@ import { CONFIG } from '@/lib/config'
     const [cvs, setCvs] = useState<CV[]>([])
     const [cvsLoading, setCvsLoading] = useState(true)
     const [success, setSuccess] = useState(false)
+    const [notAdmin, setNotAdmin] = useState(false)
     const [planInfo, setPlanInfo] = useState<UserPlan | null>(null)
 
     useEffect(() => {
       if (searchParams.get('success') === '1') {
         setSuccess(true)
         window.history.replaceState(null, '', '/dashboard')
+      }
+      if (searchParams.get('error') === 'not_admin') {
+        setNotAdmin(true)
+        window.history.replaceState(null, '', '/dashboard')
+        setTimeout(() => setNotAdmin(false), 5000)
       }
     }, [searchParams])
 
@@ -177,12 +183,15 @@ import { CONFIG } from '@/lib/config'
     return (
       <div className="min-h-screen bg-black py-10 px-4">
         {success && (
-          <div className="fixed top-6 left-1/2 -translate-x-1/2 bg-green-900/80
-  border border-green-700 text-green-300 text-sm px-5 py-3 rounded-xl flex
-  items-center gap-3 shadow-lg z-10">
+          <div className="fixed top-6 left-1/2 -translate-x-1/2 bg-green-900/80 border border-green-700 text-green-300 text-sm px-5 py-3 rounded-xl flex items-center gap-3 shadow-lg z-10">
             <span>✓ Lưu CV thành công!</span>
-            <button onClick={() => setSuccess(false)} className="text-green-500
-  hover:text-green-200 leading-none">×</button>
+            <button onClick={() => setSuccess(false)} className="text-green-500 hover:text-green-200 leading-none">×</button>
+          </div>
+        )}
+        {notAdmin && (
+          <div className="fixed top-6 left-1/2 -translate-x-1/2 bg-red-900/80 border border-red-700 text-red-300 text-sm px-5 py-3 rounded-xl flex items-center gap-3 shadow-lg z-10">
+            <span>Bạn không có quyền truy cập admin.</span>
+            <button onClick={() => setNotAdmin(false)} className="text-red-400 hover:text-red-200 leading-none">×</button>
           </div>
         )}
   
