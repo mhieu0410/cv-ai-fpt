@@ -94,30 +94,7 @@ function CVCard({ cv }: { cv: CV }) {
   )
 }
 
-function PlanBadge({ plan }: { plan: UserPlan }) {
-  if (plan.plan === 'free') {
-    return (
-      <a href="/orders/me" className="text-xs font-medium bg-zinc-800 text-zinc-400 px-2.5 py-1 rounded-full hover:bg-zinc-700 transition-colors">
-        Gói Free
-      </a>
-    )
-  }
-  if (plan.isPro && plan.pro_expires_at) {
-    const days = Math.floor((new Date(plan.pro_expires_at).getTime() - Date.now()) / 86_400_000)
-    return (
-      <a href="/orders/me" className="text-xs font-medium bg-blue-900/60 text-blue-300 border border-blue-700 px-2.5 py-1 rounded-full hover:bg-blue-900 transition-colors">
-        Pro · còn {days} ngày
-      </a>
-    )
-  }
-  return (
-    <a href="/upgrade" className="text-xs font-medium bg-orange-950/60 text-orange-300 border border-orange-700 px-2.5 py-1 rounded-full hover:bg-orange-950 transition-colors">
-      Pro đã hết hạn — Gia hạn
-    </a>
-  )
-}
-
-function DashboardContent({ showAdminLink }: { showAdminLink: boolean }) {
+function DashboardContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -128,6 +105,7 @@ function DashboardContent({ showAdminLink }: { showAdminLink: boolean }) {
   const [success, setSuccess] = useState(false)
   const [notAdmin, setNotAdmin] = useState(false)
   const [planInfo, setPlanInfo] = useState<UserPlan | null>(null)
+
 
   useEffect(() => {
     if (searchParams.get('success') === '1') {
@@ -166,21 +144,16 @@ function DashboardContent({ showAdminLink }: { showAdminLink: boolean }) {
     })
   }, [router])
 
-  async function handleLogout() {
-    await supabase.auth.signOut()
-    router.push('/login')
-  }
-
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
         <p className="text-zinc-500">Đang tải...</p>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-black py-10 px-4">
+    <div className="min-h-screen bg-zinc-950 py-10 px-4">
       {success && (
         <div className="fixed top-6 left-1/2 -translate-x-1/2 bg-green-900/80 border border-green-700 text-green-300 text-sm px-5 py-3 rounded-xl flex items-center gap-3 shadow-lg z-10">
           <span>✓ Lưu CV thành công!</span>
@@ -195,31 +168,9 @@ function DashboardContent({ showAdminLink }: { showAdminLink: boolean }) {
       )}
 
       <div className="max-w-2xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <p className="text-zinc-500 text-sm">Xin chào,</p>
-            <p className="text-white font-semibold">{email}</p>
-          </div>
-          <div className="flex items-center gap-3">
-            {planInfo && <PlanBadge plan={planInfo} />}
-            {showAdminLink && (
-              <a
-                href="/admin"
-                className="text-xs font-medium bg-violet-950 text-violet-300 border border-violet-700 px-2.5 py-1 rounded-full hover:bg-violet-900 transition-colors"
-              >
-                🛠 Admin
-              </a>
-            )}
-            <a
-              href="/feedback?from=dashboard"
-              className="text-zinc-500 hover:text-zinc-300 text-sm transition-colors"
-            >
-              💬 Góp ý
-            </a>
-            <button onClick={handleLogout} className="text-zinc-500 hover:text-white text-sm transition-colors">
-              Đăng xuất
-            </button>
-          </div>
+        <div className="mb-8">
+          <p className="text-zinc-500 text-sm">Xin chào,</p>
+          <p className="text-white font-semibold">{email}</p>
         </div>
 
         {(() => {
@@ -272,14 +223,14 @@ function DashboardContent({ showAdminLink }: { showAdminLink: boolean }) {
   )
 }
 
-export default function DashboardClient({ showAdminLink }: { showAdminLink: boolean }) {
+export default function DashboardClient() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
         <p className="text-zinc-500">Đang tải...</p>
       </div>
     }>
-      <DashboardContent showAdminLink={showAdminLink} />
+      <DashboardContent />
     </Suspense>
   )
 }
