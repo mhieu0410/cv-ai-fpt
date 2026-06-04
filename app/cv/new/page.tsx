@@ -1,11 +1,11 @@
 import AppNavbar from '@/components/AppNavbar'
-import NewCvClient from './NewCvClient'
+import CvForm from '@/components/CvForm'
 
 export default function NewCvPage() {
   return (
     <>
       <AppNavbar />
-      <NewCvClient />
+      <CvForm mode="create" />
     </>
   )
 }

@@ -67,26 +67,42 @@ function CVCard({ cv }: { cv: CV }) {
           <button onClick={() => setPdfToast(false)} className="text-zinc-500 hover:text-zinc-200 ml-1 leading-none">×</button>
         </div>
       )}
-      <div className="bg-zinc-900 rounded-xl px-5 py-4 flex items-center justify-between gap-4">
-        <div className="min-w-0">
+      <div className="bg-zinc-900 rounded-xl px-5 py-4">
+        {/* Title row */}
+        <div className="mb-3">
           <p className="text-white font-medium truncate">{cv.title}</p>
           <p className="text-zinc-500 text-sm mt-0.5">Tạo lúc {formatDate(cv.created_at)}</p>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        {/* Actions row */}
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
-            onClick={() => router.push(`/cv/${cv.id}/suggest`)}
-            className="text-sm text-blue-400 hover:text-blue-200 border border-blue-800 hover:border-blue-500 px-4 py-1.5 rounded-lg transition-colors"
+            onClick={() => router.push(`/cv/${cv.id}/view`)}
+            className="text-sm text-zinc-300 hover:text-white border border-zinc-700 hover:border-zinc-500 px-3 py-1.5 rounded-lg transition-colors"
           >
-            Gợi ý chuyên ngành
+            👁 Xem
+          </button>
+          <button
+            type="button"
+            onClick={() => router.push(`/cv/${cv.id}/edit`)}
+            className="text-sm text-zinc-300 hover:text-white border border-zinc-700 hover:border-zinc-500 px-3 py-1.5 rounded-lg transition-colors"
+          >
+            ✏️ Sửa
           </button>
           <button
             type="button"
             onClick={handleDownloadPdf}
             disabled={downloading}
-            className="text-sm text-zinc-400 hover:text-white border border-zinc-700 hover:border-zinc-500 px-4 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+            className="text-sm text-zinc-300 hover:text-white border border-zinc-700 hover:border-zinc-500 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
           >
-            {downloading ? 'Đang tạo...' : 'Tải PDF'}
+            📥 {downloading ? 'Đang tạo...' : 'Tải PDF'}
+          </button>
+          <button
+            type="button"
+            onClick={() => router.push(`/cv/${cv.id}/suggest`)}
+            className="text-sm text-blue-400 hover:text-blue-200 border border-blue-800 hover:border-blue-500 px-3 py-1.5 rounded-lg transition-colors"
+          >
+            🎯 Gợi ý chuyên ngành
           </button>
         </div>
       </div>
@@ -103,6 +119,7 @@ function DashboardContent() {
   const [cvs, setCvs] = useState<CV[]>([])
   const [cvsLoading, setCvsLoading] = useState(true)
   const [success, setSuccess] = useState(false)
+  const [updated, setUpdated] = useState(false)
   const [notAdmin, setNotAdmin] = useState(false)
   const [planInfo, setPlanInfo] = useState<UserPlan | null>(null)
 
@@ -111,6 +128,11 @@ function DashboardContent() {
     if (searchParams.get('success') === '1') {
       setSuccess(true)
       window.history.replaceState(null, '', '/dashboard')
+    }
+    if (searchParams.get('updated') === '1') {
+      setUpdated(true)
+      window.history.replaceState(null, '', '/dashboard')
+      setTimeout(() => setUpdated(false), 5000)
     }
     if (searchParams.get('error') === 'not_admin') {
       setNotAdmin(true)
@@ -158,6 +180,12 @@ function DashboardContent() {
         <div className="fixed top-6 left-1/2 -translate-x-1/2 bg-green-900/80 border border-green-700 text-green-300 text-sm px-5 py-3 rounded-xl flex items-center gap-3 shadow-lg z-10">
           <span>✓ Lưu CV thành công!</span>
           <button onClick={() => setSuccess(false)} className="text-green-500 hover:text-green-200 leading-none">×</button>
+        </div>
+      )}
+      {updated && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 bg-blue-900/80 border border-blue-700 text-blue-300 text-sm px-5 py-3 rounded-xl flex items-center gap-3 shadow-lg z-10">
+          <span>✓ Cập nhật CV thành công!</span>
+          <button onClick={() => setUpdated(false)} className="text-blue-500 hover:text-blue-200 leading-none">×</button>
         </div>
       )}
       {notAdmin && (
