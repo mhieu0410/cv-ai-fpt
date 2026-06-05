@@ -64,12 +64,21 @@ export default function LoginPage() {
           >
             {loading ? 'Đang xử lý...' : 'Đăng nhập'}
           </button>
-          <p className="text-zinc-500 text-sm text-center">
-            Chưa có tài khoản?{' '}
-            <a href="/signup" className="text-white hover:underline">
-              Đăng ký
+          
+          <div className="flex flex-col items-center gap-2 mt-2">
+            <p className="text-zinc-500 text-sm text-center">
+              Chưa có tài khoản?{' '}
+              <a href="/signup" className="text-white hover:underline">
+                Đăng ký
+              </a>
+            </p>
+            <a 
+              href="/forgot-password" 
+              className="text-zinc-500 hover:text-zinc-300 text-xs transition-colors hover:underline"
+            >
+              Quên mật khẩu?
             </a>
-          </p>
+          </div>
         </form>
       </div>
     </div>
