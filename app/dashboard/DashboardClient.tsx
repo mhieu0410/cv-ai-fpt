@@ -104,6 +104,13 @@ function CVCard({ cv }: { cv: CV }) {
           >
             🎯 Gợi ý chuyên ngành
           </button>
+          <button
+            type="button"
+            onClick={() => router.push(`/cv/${cv.id}/match`)}
+            className="text-sm text-violet-400 hover:text-violet-200 border border-violet-800 hover:border-violet-500 px-3 py-1.5 rounded-lg transition-colors"
+          >
+            🎯 Match JD
+          </button>
         </div>
       </div>
     </>

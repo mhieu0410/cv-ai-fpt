@@ -57,14 +57,12 @@ export default function ViewActions({ cvId, cvTitle, content }: Props) {
         📥 {downloading ? 'Đang tạo...' : 'Tải PDF'}
       </button>
 
-      <button
-        type="button"
-        disabled
-        title="Coming soon — tính năng đang phát triển"
-        className="flex items-center gap-1.5 px-3.5 py-2 text-sm text-zinc-600 border border-zinc-800 rounded-lg cursor-not-allowed select-none"
+      <Link
+        href={`/cv/${cvId}/match`}
+        className="flex items-center gap-1.5 px-3.5 py-2 text-sm text-violet-400 hover:text-violet-200 border border-violet-800 hover:border-violet-500 rounded-lg transition-colors"
       >
-        🎯 Match JD
-      </button>
+        🎯 Match với JD
+      </Link>
     </div>
   )
 }
