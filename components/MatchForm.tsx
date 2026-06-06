@@ -3,7 +3,6 @@
 import { useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import ReactMarkdown from 'react-markdown'
 
 const LOADING_MESSAGES = [
   'Đang phân tích CV...',
@@ -11,9 +10,47 @@ const LOADING_MESSAGES = [
   'Đang tạo gợi ý...',
 ]
 
+interface MatchResult {
+  overall_score: number
+  skill_match: number
+  experience_match: number
+  education_match: number
+  missing_skills: string[]
+  strengths: string[]
+  recommendation: string
+}
+
 interface Props {
   cvId: string
   cvTitle: string
+}
+
+function getScoreLevel(score: number) {
+  if (score >= 75) {
+    return { color: '#00A651', textColor: 'text-[#00A651]', ring: 'ring-[#00A651]/40', bg: 'bg-[#00A651]/10', label: 'Phù hợp cao' }
+  }
+  if (score >= 50) {
+    return { color: '#F59E0B', textColor: 'text-amber-400', ring: 'ring-amber-400/40', bg: 'bg-amber-400/10', label: 'Phù hợp trung bình' }
+  }
+  return { color: '#EF4444', textColor: 'text-red-400', ring: 'ring-red-400/40', bg: 'bg-red-400/10', label: 'Cần cải thiện nhiều' }
+}
+
+function ScoreBar({ label, value }: { label: string; value: number }) {
+  const pct = Math.max(0, Math.min(100, value))
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-sm text-zinc-300">{label}</span>
+        <span className="text-sm font-semibold text-violet-400">{pct}%</span>
+      </div>
+      <div className="h-2 rounded-full bg-zinc-800 overflow-hidden">
+        <div
+          className="h-full rounded-full bg-violet-500 transition-all duration-700 ease-out"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  )
 }
 
 export default function MatchForm({ cvId, cvTitle }: Props) {
@@ -21,7 +58,7 @@ export default function MatchForm({ cvId, cvTitle }: Props) {
   const [jobText, setJobText] = useState('')
   const [loading, setLoading] = useState(false)
   const [loadingMsg, setLoadingMsg] = useState(LOADING_MESSAGES[0])
-  const [result, setResult] = useState<string | null>(null)
+  const [result, setResult] = useState<MatchResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [showToast, setShowToast] = useState(false)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -159,34 +196,96 @@ export default function MatchForm({ cvId, cvTitle }: Props) {
           </div>
 
           {/* Right column: result */}
-          {result && !loading && (
-            <div className="w-full lg:flex-1">
-              <div className="rounded-2xl border border-violet-800/50 bg-zinc-900 p-6 shadow-[0_0_40px_rgba(139,92,246,0.08)]">
-                <h2 className="text-lg font-semibold text-zinc-200 mb-4">
-                  Kết quả phân tích
-                </h2>
+          {result && !loading && (() => {
+            const level = getScoreLevel(result.overall_score)
+            return (
+              <div className="w-full lg:flex-1">
+                <div className="rounded-2xl border border-violet-800/50 bg-zinc-900 p-6 shadow-[0_0_40px_rgba(139,92,246,0.08)]">
+                  <h2 className="text-lg font-semibold text-zinc-200 mb-6">
+                    Kết quả phân tích
+                  </h2>
 
-                <div className="text-zinc-300 space-y-1 [&_h3]:text-xl [&_h3]:font-bold [&_h3]:text-violet-400 [&_h3]:mt-5 [&_h3]:mb-2 [&_strong]:text-emerald-400 [&_ul]:list-disc [&_ul]:pl-5 [&_ul>li]:mt-1 [&_ul>li::marker]:text-violet-400 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol>li]:mt-1 [&_em]:text-zinc-400 [&_p]:mb-2">
-                  <ReactMarkdown>{result}</ReactMarkdown>
-                </div>
+                  {/* Overall score */}
+                  <div className="flex flex-col items-center">
+                    <div
+                      className={`flex flex-col items-center justify-center w-36 h-36 rounded-full ring-4 ${level.ring} ${level.bg}`}
+                    >
+                      <span className="text-4xl font-extrabold" style={{ color: level.color }}>
+                        {result.overall_score}%
+                      </span>
+                      <span className="text-xs text-zinc-400 mt-1">Mức độ phù hợp</span>
+                    </div>
+                    <p className={`mt-3 font-semibold ${level.textColor}`}>{level.label}</p>
+                  </div>
 
-                <div className="flex flex-col sm:flex-row gap-3 mt-6 pt-5 border-t border-zinc-800">
-                  <Link
-                    href={`/cv/${cvId}/edit`}
-                    className="flex-1 text-center py-2.5 px-4 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-medium transition text-sm"
-                  >
-                    ✏️ Sửa CV theo gợi ý
-                  </Link>
-                  <button
-                    onClick={handleReset}
-                    className="flex-1 py-2.5 px-4 rounded-lg border border-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-white font-medium transition text-sm"
-                  >
-                    🔄 Thử với JD khác
-                  </button>
+                  {/* Sub-scores */}
+                  <div className="mt-7 space-y-4">
+                    <ScoreBar label="Kỹ năng" value={result.skill_match} />
+                    <ScoreBar label="Kinh nghiệm" value={result.experience_match} />
+                    <ScoreBar label="Học vấn" value={result.education_match} />
+                  </div>
+
+                  {/* Strengths */}
+                  {result.strengths.length > 0 && (
+                    <div className="mt-7">
+                      <h3 className="text-sm font-bold text-emerald-400 mb-2">✓ Điểm mạnh</h3>
+                      <ul className="space-y-1.5">
+                        {result.strengths.map((s, i) => (
+                          <li key={i} className="flex items-start gap-2 text-sm text-zinc-300">
+                            <span className="text-emerald-400 mt-0.5 shrink-0">✓</span>
+                            <span>{s}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Missing skills */}
+                  {result.missing_skills.length > 0 && (
+                    <div className="mt-7">
+                      <h3 className="text-sm font-bold text-orange-400 mb-2">✗ Kỹ năng còn thiếu</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {result.missing_skills.map((s, i) => (
+                          <span
+                            key={i}
+                            className="inline-flex items-center gap-1.5 text-sm text-orange-300 bg-orange-500/10 border border-orange-500/30 rounded-full px-3 py-1"
+                          >
+                            <span className="text-orange-400">✗</span>
+                            {s}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Recommendation */}
+                  {result.recommendation && (
+                    <div className="mt-7">
+                      <h3 className="text-sm font-bold text-violet-400 mb-2">💡 Khuyến nghị</h3>
+                      <div className="border-l-4 border-violet-500 bg-violet-500/10 rounded-r-xl px-4 py-3 text-sm text-zinc-200 leading-relaxed">
+                        {result.recommendation}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex flex-col sm:flex-row gap-3 mt-7 pt-5 border-t border-zinc-800">
+                    <Link
+                      href={`/cv/${cvId}/edit`}
+                      className="flex-1 text-center py-2.5 px-4 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-medium transition text-sm"
+                    >
+                      ✏️ Sửa CV theo gợi ý
+                    </Link>
+                    <button
+                      onClick={handleReset}
+                      className="flex-1 py-2.5 px-4 rounded-lg border border-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-white font-medium transition text-sm"
+                    >
+                      🔄 Thử với JD khác
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )
+          })()}
         </div>
       </div>
 

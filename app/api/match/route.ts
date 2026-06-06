@@ -4,6 +4,27 @@ import { NextRequest } from 'next/server'
 
 const AI_API_URL = process.env.AI_MATCH_API_URL || ''
 
+interface MatchResult {
+  overall_score: number
+  skill_match: number
+  experience_match: number
+  education_match: number
+  missing_skills: string[]
+  strengths: string[]
+  recommendation: string
+}
+
+function isValidMatchResult(value: unknown): value is MatchResult {
+  if (!value || typeof value !== 'object') return false
+  const r = value as Record<string, unknown>
+  return (
+    typeof r.overall_score === 'number' &&
+    Array.isArray(r.strengths) &&
+    Array.isArray(r.missing_skills) &&
+    typeof r.recommendation === 'string'
+  )
+}
+
 function buildCvText(content: Record<string, unknown>): string {
   const parts: string[] = []
 
@@ -119,53 +140,80 @@ export async function POST(request: NextRequest) {
 
   const cv_text = buildCvText((cv.content as Record<string, unknown>) || {})
 
-  let result: string
-  let isMock = false
+  let result: MatchResult
 
   if (!AI_API_URL || AI_API_URL === 'mock') {
     await new Promise((r) => setTimeout(r, 1500))
 
-    result = `### Đánh giá tổng quan
-
-CV của bạn **match khoảng 72%** với JD này. Đây là mức độ phù hợp **trung bình - khá**, có thể ứng tuyển nhưng cần cải thiện một số điểm.
-
-### Điểm mạnh
-- **Java và Spring Boot**: Bạn đã có kinh nghiệm với 2 công nghệ cốt lõi JD yêu cầu
-- **MySQL**: Phù hợp với yêu cầu về database
-- **REST APIs**: Có project chứng minh khả năng xây dựng API
-- **Background FPT**: Là điểm cộng vì JD ưu tiên sinh viên có nền tảng kỹ thuật vững
-
-### Điểm thiếu
-- **Docker**: JD yêu cầu kinh nghiệm Docker nhưng CV chưa thấy nhắc đến
-- **Cloud deployment**: Chưa có bằng chứng từng deploy lên cloud (AWS, GCP, Azure)
-- **Authentication mechanisms**: Có nhắc JWT nhưng cần làm rõ kinh nghiệm thực tế
-
-### Khuyến nghị
-1. Học Docker cơ bản (1-2 tuần) và **bổ sung 1 project dùng Docker** vào CV
-2. Deploy 1 project hiện có lên Render/Vercel/Railway để có dòng "Deployed on..."
-3. Trong phần kinh nghiệm JWT, thêm chi tiết: *"Implemented JWT-based authentication for X project, handling Y concurrent users"*
-4. Bổ sung 1 dòng về Agile methodology trong skills (JD có nhắc)
-
-Với những điều chỉnh trên, bạn có thể nâng match lên **85-90%**.`
-
-    isMock = true
+    result = {
+      overall_score: 72,
+      skill_match: 78,
+      experience_match: 65,
+      education_match: 80,
+      missing_skills: ['Docker', 'Cloud deployment (AWS/GCP/Azure)', 'Agile methodology'],
+      strengths: [
+        'Có kinh nghiệm Java và Spring Boot - 2 công nghệ cốt lõi JD yêu cầu',
+        'Có kinh nghiệm với MySQL, phù hợp yêu cầu về database',
+        'Có project chứng minh khả năng xây dựng REST API',
+      ],
+      recommendation:
+        'Học Docker cơ bản và bổ sung 1 project dùng Docker vào CV. Deploy 1 project hiện có lên Render/Vercel/Railway. Bổ sung chi tiết về kinh nghiệm JWT authentication và Agile methodology để tăng độ phù hợp.',
+    }
   } else {
-    const aiResponse = await fetch(AI_API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cv_text, job_text }),
-    })
-
-    if (!aiResponse.ok) {
-      return Response.json({ error: 'AI service error' }, { status: 502 })
+    let aiResponse: Response
+    try {
+      aiResponse = await fetch(AI_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cv_text, job_text }),
+        signal: AbortSignal.timeout(60000),
+      })
+    } catch (err) {
+      if (err instanceof Error && (err.name === 'AbortError' || err.name === 'TimeoutError')) {
+        return Response.json(
+          {
+            error: 'ai_timeout',
+            message: 'AI mất quá nhiều thời gian phản hồi (server đang khởi động), vui lòng thử lại',
+          },
+          { status: 504 },
+        )
+      }
+      return Response.json(
+        { error: 'ai_service_error', message: 'AI service tạm thời không phản hồi, vui lòng thử lại sau' },
+        { status: 502 },
+      )
     }
 
-    result = await aiResponse.text()
+    if (!aiResponse.ok) {
+      return Response.json(
+        { error: 'ai_service_error', message: 'AI service tạm thời không phản hồi, vui lòng thử lại sau' },
+        { status: 502 },
+      )
+    }
+
+    let parsed: unknown
+    try {
+      parsed = await aiResponse.json()
+    } catch {
+      return Response.json(
+        { error: 'ai_service_error', message: 'AI service tạm thời không phản hồi, vui lòng thử lại sau' },
+        { status: 502 },
+      )
+    }
+
+    if (!isValidMatchResult(parsed)) {
+      return Response.json(
+        { error: 'ai_service_error', message: 'AI service trả về dữ liệu không hợp lệ, vui lòng thử lại sau' },
+        { status: 502 },
+      )
+    }
+
+    result = parsed
   }
 
   const { data: match, error: insertError } = await supabase
     .from('matches')
-    .insert({ cv_id, user_id: user.id, job_text, result_text: result })
+    .insert({ cv_id, user_id: user.id, job_text, result_json: result })
     .select('id')
     .single()
 
@@ -173,5 +221,5 @@ Với những điều chỉnh trên, bạn có thể nâng match lên **85-90%**
     return Response.json({ error: 'Failed to save match result' }, { status: 500 })
   }
 
-  return Response.json({ result, matchId: match.id, isMock })
+  return Response.json({ result, matchId: match.id })
 }
