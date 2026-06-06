@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { pdf } from '@react-pdf/renderer'
-import CvPdfTemplate from '@/components/CvPdfTemplate'
+import { getTemplate } from '@/components/cv-templates/registry'
 
 interface Suggestion {
   major: string
@@ -102,7 +102,8 @@ export default function SuggestClient() {
     if (!cvData) return
     setDownloading(true)
     try {
-      const blob = await pdf(<CvPdfTemplate cv={cvData} />).toBlob()
+      const { Pdf } = getTemplate('classic')
+      const blob = await pdf(<Pdf data={cvData.content} />).toBlob()
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url

@@ -4,7 +4,7 @@ import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { pdf } from '@react-pdf/renderer'
-import CvPdfTemplate from '@/components/CvPdfTemplate'
+import { getTemplate } from '@/components/cv-templates/registry'
 import { getUserPlan, type UserPlan } from '@/lib/user-plan'
 import { CONFIG } from '@/lib/config'
 
@@ -42,7 +42,8 @@ function CVCard({ cv }: { cv: CV }) {
         .eq('id', cv.id)
         .single()
       if (!data) return
-      const blob = await pdf(<CvPdfTemplate cv={data} />).toBlob()
+      const { Pdf } = getTemplate('classic')
+      const blob = await pdf(<Pdf data={data.content} />).toBlob()
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url

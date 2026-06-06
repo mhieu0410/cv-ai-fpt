@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { pdf } from '@react-pdf/renderer'
-import CvPdfTemplate from '@/components/CvPdfTemplate'
+import { getTemplate } from '@/components/cv-templates/registry'
 
 interface CvContent {
   personal:    { name: string; email: string; phone: string }
@@ -25,8 +25,9 @@ export default function ViewActions({ cvId, cvTitle, content }: Props) {
   async function handleDownload() {
     setDownloading(true)
     try {
+      const { Pdf } = getTemplate('classic')
       const blob = await pdf(
-        <CvPdfTemplate cv={{ title: cvTitle, content }} />
+        <Pdf data={content} />
       ).toBlob()
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')

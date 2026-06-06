@@ -6,6 +6,7 @@ import {
   View,
   StyleSheet,
 } from '@react-pdf/renderer'
+import type { CvData } from '../types'
 
 Font.register({
   family: 'BeVietnamPro',
@@ -20,22 +21,6 @@ Font.register({
     },
   ],
 })
-
-interface Education { school: string; major: string; year: string }
-interface Project   { name: string; description: string }
-interface Activity  { description: string }
-
-interface CvContent {
-  personal:   { name: string; email: string; phone: string }
-  education:  Education[]
-  skills:     string[]
-  projects:   Project[]
-  activities?: Activity[]
-}
-
-interface CvPdfTemplateProps {
-  cv: { title: string; content: CvContent }
-}
 
 const s = StyleSheet.create({
   page: {
@@ -92,12 +77,11 @@ const s = StyleSheet.create({
   actText: { fontSize: 9, color: '#444', lineHeight: 1.5 },
 })
 
-export default function CvPdfTemplate({ cv }: CvPdfTemplateProps) {
-  const { content } = cv
-  const { personal, education, skills, projects, activities } = content
+export function ClassicPdf({ data }: { data: CvData }) {
+  const { personal, education, skills, projects, activities } = data
 
   return (
-    <Document title={cv.title}>
+    <Document title={personal.name}>
       <Page size="A4" style={s.page}>
 
         {/* Header */}
@@ -161,3 +145,5 @@ export default function CvPdfTemplate({ cv }: CvPdfTemplateProps) {
     </Document>
   )
 }
+
+export default ClassicPdf
