@@ -20,12 +20,12 @@ interface Props {
 }
 
 export default function ViewActions({ cvId, cvTitle, content }: Props) {
-  const [downloading, setDownloading] = useState(false)
+  const [downloading, setDownloading] = useState<string | null>(null)
 
-  async function handleDownload() {
-    setDownloading(true)
+  async function handleDownload(templateId: string) {
+    setDownloading(templateId)
     try {
-      const { Pdf } = getTemplate('classic')
+      const { Pdf } = getTemplate(templateId)
       const blob = await pdf(
         <Pdf data={content} />
       ).toBlob()
@@ -36,7 +36,7 @@ export default function ViewActions({ cvId, cvTitle, content }: Props) {
       a.click()
       URL.revokeObjectURL(url)
     } finally {
-      setDownloading(false)
+      setDownloading(null)
     }
   }
 
@@ -51,11 +51,21 @@ export default function ViewActions({ cvId, cvTitle, content }: Props) {
 
       <button
         type="button"
-        onClick={handleDownload}
-        disabled={downloading}
+        onClick={() => handleDownload('classic')}
+        disabled={downloading !== null}
         className="flex items-center gap-1.5 px-3.5 py-2 text-sm text-zinc-300 hover:text-white border border-zinc-700 hover:border-zinc-500 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        📥 {downloading ? 'Đang tạo...' : 'Tải PDF'}
+        📥 {downloading === 'classic' ? 'Đang tạo...' : 'Tải PDF'}
+      </button>
+
+      {/* TEMP: nút test template Modern Tech — xóa khi có UI chọn template */}
+      <button
+        type="button"
+        onClick={() => handleDownload('modern-tech')}
+        disabled={downloading !== null}
+        className="flex items-center gap-1.5 px-3.5 py-2 text-sm text-zinc-300 hover:text-white border border-zinc-700 hover:border-zinc-500 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        📥 {downloading === 'modern-tech' ? 'Đang tạo...' : 'Tải PDF Modern Tech'}
       </button>
 
       <Link
