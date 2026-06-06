@@ -38,11 +38,11 @@ function CVCard({ cv }: { cv: CV }) {
     try {
       const { data } = await supabase
         .from('cvs')
-        .select('title, content')
+        .select('title, content, template')
         .eq('id', cv.id)
         .single()
       if (!data) return
-      const { Pdf } = getTemplate('classic')
+      const { Pdf } = getTemplate(data.template || 'classic')
       const blob = await pdf(<Pdf data={data.content} />).toBlob()
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')

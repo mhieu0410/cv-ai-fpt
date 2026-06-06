@@ -3,6 +3,8 @@ import { createServerClient } from '@supabase/ssr'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import AppNavbar from '@/components/AppNavbar'
+import TemplateSelector from '@/components/TemplateSelector'
+import { getUserPlan } from '@/lib/user-plan'
 import ViewActions from './ViewActions'
 
 interface Education { school: string; major: string; year: string }
@@ -57,7 +59,7 @@ export default async function ViewCvPage({
 
   const { data: cv } = await supabase
     .from('cvs')
-    .select('id, title, content, created_at')
+    .select('id, title, content, created_at, template')
     .eq('id', id)
     .eq('user_id', user.id)
     .single()
@@ -65,6 +67,7 @@ export default async function ViewCvPage({
   if (!cv) redirect('/dashboard?error=cv_not_found')
 
   const content = cv.content as CvContent
+  const { isPro: userIsPro } = await getUserPlan(supabase, user.id)
 
   return (
     <>
@@ -88,8 +91,19 @@ export default async function ViewCvPage({
               cvId={id}
               cvTitle={cv.title}
               content={content}
+              template={cv.template}
             />
           </div>
+
+          {/* ── Chọn mẫu CV ── */}
+          <section className="mb-8">
+            <TemplateSelector
+              cvId={id}
+              currentTemplate={cv.template}
+              userIsPro={userIsPro}
+              data={content}
+            />
+          </section>
 
           {/* ── Thông tin cá nhân ── */}
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-4">

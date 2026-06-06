@@ -14,12 +14,13 @@ interface CvContent {
 }
 
 interface Props {
-  cvId:    string
-  cvTitle: string
-  content: CvContent
+  cvId:     string
+  cvTitle:  string
+  content:  CvContent
+  template: string
 }
 
-export default function ViewActions({ cvId, cvTitle, content }: Props) {
+export default function ViewActions({ cvId, cvTitle, content, template }: Props) {
   const [downloading, setDownloading] = useState<string | null>(null)
 
   async function handleDownload(templateId: string) {
@@ -51,21 +52,11 @@ export default function ViewActions({ cvId, cvTitle, content }: Props) {
 
       <button
         type="button"
-        onClick={() => handleDownload('classic')}
+        onClick={() => handleDownload(template)}
         disabled={downloading !== null}
         className="flex items-center gap-1.5 px-3.5 py-2 text-sm text-zinc-300 hover:text-white border border-zinc-700 hover:border-zinc-500 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        📥 {downloading === 'classic' ? 'Đang tạo...' : 'Tải PDF'}
-      </button>
-
-      {/* TEMP: nút test template Modern Tech — xóa khi có UI chọn template */}
-      <button
-        type="button"
-        onClick={() => handleDownload('modern-tech')}
-        disabled={downloading !== null}
-        className="flex items-center gap-1.5 px-3.5 py-2 text-sm text-zinc-300 hover:text-white border border-zinc-700 hover:border-zinc-500 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        📥 {downloading === 'modern-tech' ? 'Đang tạo...' : 'Tải PDF Modern Tech'}
+        📥 {downloading === template ? 'Đang tạo...' : 'Tải PDF'}
       </button>
 
       <Link
