@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 import { CONFIG } from '@/lib/config'
+import { createRouteSupabase } from '@/lib/supabase-server'
 
 function generateOrderCode(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
@@ -13,22 +12,7 @@ function generateOrderCode(): string {
 }
 
 export async function POST() {
-  const cookieStore = await cookies()
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll: () => cookieStore.getAll(),
-        setAll: (toSet) => {
-          for (const { name, value, options } of toSet) {
-            cookieStore.set(name, value, options)
-          }
-        },
-      },
-    }
-  )
+  const supabase = await createRouteSupabase()
 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { CONFIG } from '@/lib/config'
+import { computeAtsScore } from '@/lib/ats-score'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -186,6 +187,19 @@ export default function CvForm({ mode, initialData, cvId }: Props) {
   const errors = computeErrors(title, personal, education, skills, projects, activities)
   const valid  = isFormValid(errors)
 
+  // Độ hoàn thiện CV (ước tính ATS) — tính realtime từ state hiện tại
+  const strength = computeAtsScore({ personal, education, skills, projects, activities }, title)
+  const strengthColor =
+    strength.level === 'excellent' ? '#10b981'
+    : strength.level === 'good' ? '#22c55e'
+    : strength.level === 'fair' ? '#f59e0b'
+    : '#ef4444'
+  const strengthLabel =
+    strength.level === 'excellent' ? 'Xuất sắc'
+    : strength.level === 'good' ? 'Tốt'
+    : strength.level === 'fair' ? 'Khá'
+    : 'Cần bổ sung'
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) router.push('/login')
@@ -346,6 +360,22 @@ export default function CvForm({ mode, initialData, cvId }: Props) {
           <h1 className="text-white text-2xl font-bold">
             {mode === 'create' ? 'Tạo CV mới' : 'Chỉnh sửa CV'}
           </h1>
+        </div>
+
+        {/* Thanh độ hoàn thiện CV (live ATS preview) */}
+        <div className="mb-8 bg-zinc-900 border border-zinc-800 rounded-xl px-5 py-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-zinc-300">Độ hoàn thiện CV (ước tính ATS)</span>
+            <span className="text-sm font-bold" style={{ color: strengthColor }}>
+              {strength.score}/100 · {strengthLabel}
+            </span>
+          </div>
+          <div className="h-2 rounded-full bg-zinc-800 overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{ width: `${strength.score}%`, background: strengthColor }}
+            />
+          </div>
         </div>
 
         {/* ── Tiêu đề CV ── */}

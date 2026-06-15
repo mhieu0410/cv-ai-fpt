@@ -113,11 +113,13 @@ function UserModal({
   const badge = getPlanBadge(user.plan, user.pro_expires_at)
 
   useEffect(() => {
-    setDetailLoading(true)
+    let active = true
     getUserDetail(user.id).then(d => {
+      if (!active) return
       setDetail(d)
       setDetailLoading(false)
     })
+    return () => { active = false }
   }, [user.id])
 
   async function handleGrantPro() {
@@ -435,6 +437,7 @@ export default function UsersTable({ users }: { users: UserRow[] }) {
 
       {selectedUser && (
         <UserModal
+          key={selectedUser.id}
           user={selectedUser}
           onClose={() => setSelectedUser(null)}
           onAction={(msg, type) => setToast({ message: msg, type })}

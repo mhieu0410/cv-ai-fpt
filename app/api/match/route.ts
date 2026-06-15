@@ -1,6 +1,5 @@
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 import { NextRequest } from 'next/server'
+import { createRouteSupabase } from '@/lib/supabase-server'
 
 const AI_API_URL = process.env.AI_MATCH_API_URL || ''
 
@@ -25,12 +24,20 @@ function isValidMatchResult(value: unknown): value is MatchResult {
   )
 }
 
+/**
+ * Chuyển nội dung CV (theo schema thực tế lưu trong bảng `cvs`) thành plain text
+ * để gửi cho dịch vụ AI đối chiếu với JD.
+ *
+ * Schema khớp với CvContent ở `components/CvForm.tsx`:
+ *   { personal: {name,email,phone}, education: [{school,major,year}],
+ *     skills: string[], projects: [{name,description}], activities?: [{description}] }
+ */
 function buildCvText(content: Record<string, unknown>): string {
   const parts: string[] = []
 
-  const info = content.personalInfo as Record<string, string> | undefined
+  const info = content.personal as Record<string, string> | undefined
   if (info) {
-    const fields = [info.name, info.email, info.phone, info.address, info.summary].filter(Boolean)
+    const fields = [info.name, info.email, info.phone].filter(Boolean)
     if (fields.length) parts.push('=== Thông tin cá nhân ===\n' + fields.join('\n'))
   }
 
@@ -39,26 +46,14 @@ function buildCvText(content: Record<string, unknown>): string {
     parts.push(
       '=== Học vấn ===\n' +
         edu
-          .map((e) => [e.school, e.degree, e.field, e.startDate, e.endDate, e.description].filter(Boolean).join(' | '))
+          .map((e) => [e.school, e.major, e.year].filter(Boolean).join(' | '))
           .join('\n'),
     )
   }
 
-  const skills = content.skills as Array<Record<string, string>> | undefined
+  const skills = content.skills as string[] | undefined
   if (skills?.length) {
-    parts.push('=== Kỹ năng ===\n' + skills.map((s) => [s.name, s.level].filter(Boolean).join(': ')).join('\n'))
-  }
-
-  const exp = content.experience as Array<Record<string, string>> | undefined
-  if (exp?.length) {
-    parts.push(
-      '=== Kinh nghiệm ===\n' +
-        exp
-          .map((e) =>
-            [e.company, e.position, e.startDate, e.endDate, e.description].filter(Boolean).join(' | '),
-          )
-          .join('\n'),
-    )
+    parts.push('=== Kỹ năng ===\n' + skills.filter(Boolean).join(', '))
   }
 
   const projects = content.projects as Array<Record<string, string>> | undefined
@@ -66,16 +61,16 @@ function buildCvText(content: Record<string, unknown>): string {
     parts.push(
       '=== Dự án ===\n' +
         projects
-          .map((p) => [p.name, p.description, p.technologies, p.url].filter(Boolean).join(' | '))
+          .map((p) => [p.name, p.description].filter(Boolean).join(': '))
           .join('\n'),
     )
   }
 
-  const certs = content.certifications as Array<Record<string, string>> | undefined
-  if (certs?.length) {
+  const activities = content.activities as Array<Record<string, string>> | undefined
+  if (activities?.length) {
     parts.push(
-      '=== Chứng chỉ ===\n' +
-        certs.map((c) => [c.name, c.issuer, c.date].filter(Boolean).join(' | ')).join('\n'),
+      '=== Hoạt động ===\n' +
+        activities.map((a) => a.description).filter(Boolean).join('\n'),
     )
   }
 
@@ -83,24 +78,7 @@ function buildCvText(content: Record<string, unknown>): string {
 }
 
 export async function POST(request: NextRequest) {
-  const cookieStore = await cookies()
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options)
-          })
-        },
-      },
-    },
-  )
+  const supabase = await createRouteSupabase()
 
   const {
     data: { user },
@@ -132,6 +110,7 @@ export async function POST(request: NextRequest) {
     .from('cvs')
     .select('id, content')
     .eq('id', cv_id)
+    .eq('user_id', user.id)
     .single()
 
   if (cvError || !cv) {

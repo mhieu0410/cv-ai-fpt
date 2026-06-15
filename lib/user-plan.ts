@@ -5,6 +5,17 @@ export interface UserPlan {
   pro_expires_at: string | null
   /** true khi plan='pro' và pro_expires_at chưa quá thời điểm hiện tại */
   isPro: boolean
+  /** Số ngày còn lại của gói Pro (0 nếu không phải Pro hoặc đã hết hạn) */
+  daysLeft: number
+}
+
+const MS_PER_DAY = 1000 * 60 * 60 * 24
+
+const FREE_PLAN: UserPlan = {
+  plan: 'free',
+  pro_expires_at: null,
+  isPro: false,
+  daysLeft: 0,
 }
 
 /**
@@ -22,25 +33,24 @@ export async function getUserPlan(
     .eq('id', userId)
     .single()
 
-  // In ra màn hình console để debug chính xác dữ liệu nhận được ở Client là gì
-  console.log('Debug getUserPlan nhận từ DB:', { data, error })
-
   if (error || !data) {
     // Nếu có lỗi (ví dụ nghẽn RLS), fallback về free
-    return { plan: 'free', pro_expires_at: null, isPro: false }
+    return FREE_PLAN
   }
 
-  // Đảm bảo parse ngày tháng an toàn chống lệch múi giờ
+  // Parse ngày tháng an toàn chống lệch múi giờ
   const expireTime = data.pro_expires_at ? new Date(data.pro_expires_at).getTime() : 0
-  const currentTime = Date.now()
+  const now = Date.now()
 
-  // Điều kiện Pro: plan là 'pro' VÀ thời gian hết hạn phải lớn hơn thời gian hiện tại
-  const isPro = data.plan === 'pro' && expireTime > currentTime
+  // Điều kiện Pro: plan là 'pro' VÀ thời gian hết hạn phải lớn hơn hiện tại
+  const isPro = data.plan === 'pro' && expireTime > now
+  const daysLeft = isPro ? Math.max(0, Math.ceil((expireTime - now) / MS_PER_DAY)) : 0
 
   return {
     plan: data.plan as 'free' | 'pro',
     pro_expires_at: data.pro_expires_at as string | null,
     isPro,
+    daysLeft,
   }
 }
 

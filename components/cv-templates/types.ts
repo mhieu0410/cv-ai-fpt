@@ -17,6 +17,8 @@ export interface TemplateMeta {
   id: string
   name: string
   description: string
+  /** Nhóm chuyên ngành để gom template trong trình chọn mẫu */
+  category: string
   isPro: boolean
   Preview: ComponentType<{ data: CvData }>
   Pdf: ComponentType<{ data: CvData }>
