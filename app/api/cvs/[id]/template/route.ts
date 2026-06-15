@@ -1,30 +1,14 @@
 import { NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 import { getTemplate, listTemplates } from '@/components/cv-templates/registry'
 import { getUserPlan } from '@/lib/user-plan'
+import { createRouteSupabase } from '@/lib/supabase-server'
 
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const cookieStore = await cookies()
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll: () => cookieStore.getAll(),
-        setAll: (toSet) => {
-          for (const { name, value, options } of toSet) {
-            cookieStore.set(name, value, options)
-          }
-        },
-      },
-    }
-  )
+  const supabase = await createRouteSupabase()
 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {

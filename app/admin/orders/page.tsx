@@ -184,7 +184,6 @@ export default function AdminOrdersPage() {
   }, [])
 
   const loadData = useCallback(async () => {
-    setFetching(true)
     try {
       const data = await loadOrders()
       setOrders(data)
@@ -195,7 +194,20 @@ export default function AdminOrdersPage() {
     }
   }, [showToast])
 
-  useEffect(() => { loadData() }, [loadData])
+  useEffect(() => {
+    let active = true
+    void (async () => {
+      try {
+        const data = await loadOrders()
+        if (active) setOrders(data)
+      } catch {
+        if (active) showToast('Không thể tải danh sách đơn hàng.', 'error')
+      } finally {
+        if (active) setFetching(false)
+      }
+    })()
+    return () => { active = false }
+  }, [showToast])
 
   async function handleApprove(order: Order) {
     const ok = window.confirm(

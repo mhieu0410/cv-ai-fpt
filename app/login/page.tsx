@@ -24,7 +24,13 @@ export default function LoginPage() {
       return
     }
 
-    router.push('/dashboard')
+    // Honor ?redirect= từ middleware (chỉ chấp nhận đường dẫn nội bộ để tránh open-redirect)
+    const params = new URLSearchParams(window.location.search)
+    const redirect = params.get('redirect')
+    const dest = redirect && redirect.startsWith('/') && !redirect.startsWith('//')
+      ? redirect
+      : '/dashboard'
+    router.push(dest)
   }
 
   return (

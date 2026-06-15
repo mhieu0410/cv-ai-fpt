@@ -1,4 +1,5 @@
-import type { SupabaseClient } from '@supabase/supabase-js'
+import type { SupabaseClient, User } from '@supabase/supabase-js'
+import { createServerSupabase } from './supabase-server'
 
 /** Kiểm tra email có trong danh sách ADMIN_EMAILS không (case-insensitive). */
 export function isAdmin(email: string | null | undefined): boolean {
@@ -27,5 +28,17 @@ export async function requireAdmin(supabase: SupabaseClient) {
     throw new Error('Forbidden')
   }
 
+  return user
+}
+
+/**
+ * Helper cho Route Handlers: tạo server client, lấy user và xác nhận admin.
+ * Trả về `User` nếu hợp lệ, hoặc `null` nếu chưa đăng nhập / không phải admin.
+ * Gom logic auth admin đang lặp lại ở các route /api/admin/*.
+ */
+export async function getAdminUser(): Promise<User | null> {
+  const supabase = await createServerSupabase()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user || !isAdmin(user.email)) return null
   return user
 }

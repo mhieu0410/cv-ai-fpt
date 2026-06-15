@@ -183,7 +183,7 @@ export default function CheckoutClient() {
   }
 
   const qrUrl =
-    `https://img.vietqr.io/image/970415-${CONFIG.bank.account}-compact2.png` +
+    `https://img.vietqr.io/image/${CONFIG.bank.bin}-${CONFIG.bank.account}-compact2.png` +
     `?amount=${order.amount}&addInfo=${encodeURIComponent(order.order_code)}`
 
   return (
@@ -201,6 +201,8 @@ export default function CheckoutClient() {
         <div className="bg-zinc-900 rounded-2xl p-6 flex flex-col gap-6">
           {/* QR */}
           <div className="flex justify-center">
+            {/* QR động sinh từ VietQR (external) — next/image không tối ưu thêm cho ảnh QR nhỏ */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={qrUrl}
               alt="QR chuyển khoản"

@@ -63,10 +63,11 @@ export default async function AdminPage() {
       .limit(5),
   ])
 
-  // DEBUG — xóa sau khi xác nhận
-  const errs = { e1, e2, e3, e4, e5, e6, e7 }
-  const hasErr = Object.values(errs).some(Boolean)
-  if (hasErr) console.error('[admin/page] query errors:', JSON.stringify(errs, null, 2))
+  // Quan sát lỗi truy vấn (không chặn render — dashboard vẫn hiển thị 0 nếu lỗi)
+  const queryErrors = [e1, e2, e3, e4, e5, e6, e7].filter(Boolean)
+  if (queryErrors.length > 0) {
+    console.error('[admin/dashboard] query errors:', queryErrors.map((e) => e?.message))
+  }
 
   const revenue = paidOrders?.reduce((sum, o) => sum + (o.amount ?? 0), 0) ?? 0
   const paidCount = paidOrders?.length ?? 0

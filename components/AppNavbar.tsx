@@ -1,22 +1,11 @@
-import { cookies } from 'next/headers'
-import { createServerClient } from '@supabase/ssr'
 import { getUserPlan } from '@/lib/user-plan'
 import { isAdmin } from '@/lib/admin-auth'
 import Link from 'next/link'
 import NavbarLinks from './NavbarLinks'
+import { createServerSupabase } from '@/lib/supabase-server'
 
 export default async function AppNavbar() {
-  const cookieStore = await cookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll: () => cookieStore.getAll(),
-        setAll: () => {},
-      },
-    }
-  )
+  const supabase = await createServerSupabase()
 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
@@ -24,14 +13,10 @@ export default async function AppNavbar() {
   const plan  = await getUserPlan(supabase, user.id)
   const admin = isAdmin(user.email)
 
-  let planBadge: { type: 'free' } | { type: 'pro'; daysLeft: number }
-  if (plan.isPro && plan.pro_expires_at) {
-    const ms      = new Date(plan.pro_expires_at).getTime() - Date.now()
-    const daysLeft = Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)))
-    planBadge = { type: 'pro', daysLeft }
-  } else {
-    planBadge = { type: 'free' }
-  }
+  const planBadge: { type: 'free' } | { type: 'pro'; daysLeft: number } =
+    plan.isPro
+      ? { type: 'pro', daysLeft: plan.daysLeft }
+      : { type: 'free' }
 
   return (
     <header className="sticky top-0 z-50 bg-zinc-900 border-b border-zinc-800">

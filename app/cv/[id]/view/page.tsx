@@ -1,10 +1,9 @@
-import { cookies } from 'next/headers'
-import { createServerClient } from '@supabase/ssr'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import AppNavbar from '@/components/AppNavbar'
 import TemplateSelector from '@/components/TemplateSelector'
 import { getUserPlan } from '@/lib/user-plan'
+import { createServerSupabase } from '@/lib/supabase-server'
 import ViewActions from './ViewActions'
 
 interface Education { school: string; major: string; year: string }
@@ -41,18 +40,7 @@ export default async function ViewCvPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const cookieStore = await cookies()
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll: () => cookieStore.getAll(),
-        setAll: () => {},
-      },
-    }
-  )
+  const supabase = await createServerSupabase()
 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')

@@ -1,19 +1,8 @@
-import { cookies } from 'next/headers'
-import { createServerClient } from '@supabase/ssr'
 import Link from 'next/link'
+import { createServerSupabase } from '@/lib/supabase-server'
 
 export default async function LandingPage() {
-  const cookieStore = await cookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll: () => cookieStore.getAll(),
-        setAll: () => {},
-      },
-    }
-  )
+  const supabase = await createServerSupabase()
   const { data: { user } } = await supabase.auth.getUser()
   const isLoggedIn = !!user
 

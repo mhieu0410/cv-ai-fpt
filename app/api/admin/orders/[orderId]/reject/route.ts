@@ -1,27 +1,14 @@
 import { NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
-import { isAdmin } from '@/lib/admin-auth'
+import { getAdminUser } from '@/lib/admin-auth'
 import { createAdminClient } from '@/lib/supabase-admin'
 
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ orderId: string }> }
 ) {
-  // ── Auth: verify admin via SSR client (reads user cookie) ──────────────────
-  const cookieStore = await cookies()
-  const ssrClient = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll: () => cookieStore.getAll(),
-        setAll: () => {},
-      },
-    }
-  )
-  const { data: { user } } = await ssrClient.auth.getUser()
-  if (!user || !isAdmin(user.email)) {
+  // ── Auth: verify admin (reads user cookie + kiểm tra ADMIN_EMAILS) ──────────
+  const adminUser = await getAdminUser()
+  if (!adminUser) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
