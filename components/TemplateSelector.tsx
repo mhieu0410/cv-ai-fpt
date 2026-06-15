@@ -43,6 +43,8 @@ export default function TemplateSelector({ cvId, currentTemplate, userIsPro, dat
         return
       }
       showToast('Đã đổi mẫu CV')
+      // Đồng bộ lại server component để ViewActions (nút Tải PDF) nhận template mới.
+      router.refresh()
     } finally {
       setSaving(false)
     }

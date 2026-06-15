@@ -23,6 +23,7 @@ interface CvContent {
 interface CvData {
   title: string
   content: CvContent
+  template: string
 }
 
 export default function SuggestClient() {
@@ -54,7 +55,7 @@ export default function SuggestClient() {
 
       const { data: cv, error: cvError } = await supabase
         .from('cvs')
-        .select('id, title, user_id, content')
+        .select('id, title, user_id, content, template')
         .eq('id', cvId)
         .eq('user_id', session.user.id)
         .single()
@@ -65,7 +66,7 @@ export default function SuggestClient() {
         return
       }
 
-      setCvData({ title: cv.title, content: cv.content })
+      setCvData({ title: cv.title, content: cv.content, template: cv.template })
 
       const res = await fetch('/api/suggest', {
         method: 'POST',
@@ -102,7 +103,7 @@ export default function SuggestClient() {
     if (!cvData) return
     setDownloading(true)
     try {
-      const { Pdf } = getTemplate('classic')
+      const { Pdf } = getTemplate(cvData.template || 'classic')
       const blob = await pdf(<Pdf data={cvData.content} />).toBlob()
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
