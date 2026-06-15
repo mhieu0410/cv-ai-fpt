@@ -287,7 +287,7 @@ export default async function LandingPage() {
                   </span>
                   <h3 className="text-xl font-semibold text-white mb-1">Pro 1 tháng</h3>
                   <div className="flex items-baseline gap-1 mb-1">
-                    <span className="text-4xl font-bold text-white">49.000đ</span>
+                    <span className="text-4xl font-bold text-white">2.000đ</span>
                     <span className="text-zinc-400 text-sm">/tháng</span>
                   </div>
                   <p className="text-zinc-400 text-sm mb-6">Đầy đủ tính năng AI</p>
