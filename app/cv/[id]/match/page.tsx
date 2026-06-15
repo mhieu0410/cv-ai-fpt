@@ -16,7 +16,7 @@ export default async function MatchPage({
 
   const { data: cv } = await supabase
     .from('cvs')
-    .select('id, title')
+    .select('id, title, content')
     .eq('id', id)
     .eq('user_id', user.id)
     .single()
@@ -26,7 +26,7 @@ export default async function MatchPage({
   return (
     <>
       <AppNavbar />
-      <MatchForm cvId={cv.id} cvTitle={cv.title} />
+      <MatchForm cvId={cv.id} cvTitle={cv.title} cvContent={cv.content} />
     </>
   )
 }

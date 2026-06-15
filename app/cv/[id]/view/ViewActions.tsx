@@ -22,6 +22,7 @@ interface Props {
 
 export default function ViewActions({ cvId, cvTitle, content, template }: Props) {
   const [downloading, setDownloading] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
 
   async function handleDownload(templateId: string) {
     setDownloading(templateId)
@@ -38,6 +39,17 @@ export default function ViewActions({ cvId, cvTitle, content, template }: Props)
       URL.revokeObjectURL(url)
     } finally {
       setDownloading(null)
+    }
+  }
+
+  async function handleShare() {
+    const url = `${window.location.origin}/share/${cvId}`
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      window.prompt('Sao chép link chia sẻ:', url)
     }
   }
 
@@ -60,11 +72,25 @@ export default function ViewActions({ cvId, cvTitle, content, template }: Props)
       </button>
 
       <Link
+        href={`/cv/${cvId}/ats`}
+        className="flex items-center gap-1.5 px-3.5 py-2 text-sm text-emerald-400 hover:text-emerald-200 border border-emerald-800 hover:border-emerald-500 rounded-lg transition-colors"
+      >
+        📊 Điểm ATS
+      </Link>
+      <Link
         href={`/cv/${cvId}/match`}
         className="flex items-center gap-1.5 px-3.5 py-2 text-sm text-violet-400 hover:text-violet-200 border border-violet-800 hover:border-violet-500 rounded-lg transition-colors"
       >
         🎯 Match với JD
       </Link>
+
+      <button
+        type="button"
+        onClick={handleShare}
+        className="flex items-center gap-1.5 px-3.5 py-2 text-sm text-zinc-300 hover:text-white border border-zinc-700 hover:border-zinc-500 rounded-lg transition-colors"
+      >
+        {copied ? '✓ Đã copy link' : '🔗 Chia sẻ'}
+      </button>
     </div>
   )
 }

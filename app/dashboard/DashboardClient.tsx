@@ -70,12 +70,14 @@ function SkeletonCard() {
 }
 
 // ── CV card ────────────────────────────────────────────────────────────────
-function CVCard({ cv, onDeleted }: { cv: CV; onDeleted: (id: string) => void }) {
+function CVCard({ cv, onDeleted, onDuplicated }: { cv: CV; onDeleted: (id: string) => void; onDuplicated: (cv: CV) => void }) {
   const router = useRouter()
   const [downloading, setDownloading] = useState(false)
   const [pdfToast, setPdfToast] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [confirming, setConfirming] = useState(false)
+  const [duplicating, setDuplicating] = useState(false)
+  const [shared, setShared] = useState(false)
 
   useEffect(() => {
     if (!pdfToast) return
@@ -122,6 +124,29 @@ function CVCard({ cv, onDeleted }: { cv: CV; onDeleted: (id: string) => void }) 
     }
   }
 
+  async function handleDuplicate() {
+    setDuplicating(true)
+    try {
+      const res = await fetch(`/api/cvs/${cv.id}/duplicate`, { method: 'POST' })
+      const json = await res.json().catch(() => ({}))
+      if (res.ok && json.cv) onDuplicated(json.cv)
+      else if (json.error === 'free_limit_reached') window.location.href = '/upgrade'
+    } finally {
+      setDuplicating(false)
+    }
+  }
+
+  async function handleShare() {
+    const url = `${window.location.origin}/share/${cv.id}`
+    try {
+      await navigator.clipboard.writeText(url)
+      setShared(true)
+      setTimeout(() => setShared(false), 2000)
+    } catch {
+      window.prompt('Sao chép link chia sẻ:', url)
+    }
+  }
+
   const btn = 'text-sm px-3 py-1.5 rounded-lg transition-colors border'
   return (
     <>
@@ -165,6 +190,10 @@ function CVCard({ cv, onDeleted }: { cv: CV; onDeleted: (id: string) => void }) 
               className={`${btn} text-blue-400 hover:text-blue-200 border-blue-800 hover:border-blue-500`}>🎯 Gợi ý chuyên ngành</button>
             <button type="button" onClick={() => router.push(`/cv/${cv.id}/match`)}
               className={`${btn} text-violet-400 hover:text-violet-200 border-violet-800 hover:border-violet-500`}>🎯 Match JD</button>
+            <button type="button" onClick={handleDuplicate} disabled={duplicating}
+              className={`${btn} text-zinc-300 hover:text-white border-zinc-700 hover:border-zinc-500 disabled:opacity-50`}>📑 {duplicating ? 'Đang sao...' : 'Nhân bản'}</button>
+            <button type="button" onClick={handleShare}
+              className={`${btn} text-zinc-300 hover:text-white border-zinc-700 hover:border-zinc-500`}>{shared ? '✓ Đã copy' : '🔗 Chia sẻ'}</button>
             <button type="button" onClick={() => setConfirming(true)}
               className={`${btn} text-zinc-500 hover:text-red-400 border-transparent hover:border-red-800 ml-auto`}>🗑 Xoá</button>
           </div>
@@ -338,7 +367,12 @@ function DashboardContent() {
         ) : (
           <div className="flex flex-col gap-3">
             {visibleCvs.map((cv) => (
-              <CVCard key={cv.id} cv={cv} onDeleted={(id) => setCvs((prev) => prev.filter((c) => c.id !== id))} />
+              <CVCard
+                key={cv.id}
+                cv={cv}
+                onDeleted={(id) => setCvs((prev) => prev.filter((c) => c.id !== id))}
+                onDuplicated={(nc) => setCvs((prev) => [nc, ...prev])}
+              />
             ))}
           </div>
         )}
