@@ -18,9 +18,10 @@ interface Props {
   cvTitle:  string
   content:  CvContent
   template: string
+  isPro:    boolean
 }
 
-export default function ViewActions({ cvId, cvTitle, content, template }: Props) {
+export default function ViewActions({ cvId, cvTitle, content, template, isPro }: Props) {
   const [downloading, setDownloading] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
 
@@ -29,7 +30,7 @@ export default function ViewActions({ cvId, cvTitle, content, template }: Props)
     try {
       const { Pdf } = getTemplate(templateId)
       const blob = await pdf(
-        <Pdf data={content} />
+        <Pdf data={content} isPro={isPro} />
       ).toBlob()
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')

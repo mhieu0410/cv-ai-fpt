@@ -80,6 +80,7 @@ export default async function ViewCvPage({
               cvTitle={cv.title}
               content={content}
               template={cv.template}
+              isPro={userIsPro}
             />
           </div>
 

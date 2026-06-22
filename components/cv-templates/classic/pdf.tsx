@@ -7,6 +7,7 @@ import {
   StyleSheet,
 } from '@react-pdf/renderer'
 import type { CvData } from '../types'
+import { WatermarkPdf } from '../WatermarkPdf'
 
 Font.register({
   family: 'BeVietnamPro',
@@ -77,12 +78,13 @@ const s = StyleSheet.create({
   actText: { fontSize: 9, color: '#444', lineHeight: 1.5 },
 })
 
-export function ClassicPdf({ data }: { data: CvData }) {
+export function ClassicPdf({ data, isPro }: { data: CvData; isPro?: boolean }) {
   const { personal, education, skills, projects, activities } = data
 
   return (
     <Document title={personal.name}>
       <Page size="A4" style={s.page}>
+        <WatermarkPdf isPro={isPro} />
 
         {/* Header */}
         <Text style={s.headerName}>{personal.name}</Text>

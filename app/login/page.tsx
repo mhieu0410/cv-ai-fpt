@@ -97,7 +97,7 @@ export default function LoginPage() {
         <div className="absolute bottom-[-10%] left-[-10%] w-[60%] h-[60%] bg-pink-500 rounded-full mix-blend-multiply blur-3xl opacity-30" />
         
         <div className="relative z-10 flex items-center gap-3">
-          <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-[4px_4px_0_0_rgba(0,0,0,0.3)] border-2 border-black">
+          <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-[4px_4px_0_0_#000] border-2 border-black">
             <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
               <rect x="4" y="4" width="16" height="16" stroke="black" strokeWidth="3" fill="#C4A1FF" />
               <rect x="12" y="12" width="16" height="16" stroke="black" strokeWidth="3" fill="var(--fpt-orange)" />
@@ -148,7 +148,7 @@ export default function LoginPage() {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 bg-white relative">
         <div className="w-full max-w-[420px]">
           <div className="flex lg:hidden items-center gap-3 mb-12 justify-center">
-            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-[4px_4px_0_0_rgba(0,0,0,0.3)] border-2 border-black">
+            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-[4px_4px_0_0_#000] border-2 border-black">
               <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect x="4" y="4" width="16" height="16" stroke="black" strokeWidth="3" fill="#C4A1FF" />
                 <rect x="12" y="12" width="16" height="16" stroke="black" strokeWidth="3" fill="var(--fpt-orange)" />
@@ -211,7 +211,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@fpt.edu.vn"
-                className="w-full bg-white text-black border-2 border-zinc-200 rounded-xl px-4 py-3.5 focus:outline-none focus:border-black focus:ring-4 focus:ring-zinc-100 hover:border-zinc-300 placeholder-zinc-400 text-[15px] font-bold shadow-sm transition-all"
+                className="w-full bg-white text-black border-2 border-black/20 rounded-xl px-4 py-3.5 focus:outline-none focus:border-black focus:shadow-[4px_4px_0_0_#000] hover:border-black/50 focus:-translate-y-0.5 placeholder-zinc-400 text-[15px] font-bold transition-all duration-200"
               />
             </div>
             
@@ -229,7 +229,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full bg-white text-black border-2 border-zinc-200 rounded-xl px-4 py-3.5 focus:outline-none focus:border-black focus:ring-4 focus:ring-zinc-100 hover:border-zinc-300 placeholder-zinc-400 text-[15px] font-bold shadow-sm transition-all"
+                  className="w-full bg-white text-black border-2 border-black/20 rounded-xl px-4 py-3.5 focus:outline-none focus:border-black focus:shadow-[4px_4px_0_0_#000] hover:border-black/50 focus:-translate-y-0.5 placeholder-zinc-400 text-[15px] font-bold transition-all duration-200"
                 />
               </motion.div>
             )}

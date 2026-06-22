@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { computeAtsScore } from '@/lib/ats-score'
 import { motion } from 'framer-motion'
 import { getTemplate } from '@/components/cv-templates/registry'
+import { getUserPlan } from '@/lib/user-plan'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -125,10 +126,10 @@ function firstErrorId(err: FormErrors): string {
 // ── UI helpers ────────────────────────────────────────────────────────────────
 
 function fieldCls(bg: string, hasErr: boolean, isHighlighted: boolean, extra = '') {
-  const base = `w-full bg-white border border-zinc-200/80 text-zinc-900 rounded-xl px-4 py-2.5 focus:outline-none placeholder-zinc-400 text-sm font-medium transition-all shadow-sm ${extra}`
-  if (isHighlighted) return `${base} ring-2 ring-red-500 border-transparent`
-  if (hasErr)        return `${base} border-red-400 ring-1 ring-red-400`
-  return `${base} focus:border-[var(--fpt-orange)] focus:ring-2 focus:ring-orange-500/20 hover:border-zinc-300`
+  const base = `w-full bg-white border-2 border-black text-black rounded-xl px-4 py-3 focus:outline-none placeholder-zinc-400 text-[14px] font-bold transition-all shadow-[2px_2px_0_0_#000] hover:shadow-[4px_4px_0_0_#000] focus:shadow-none focus:translate-y-[2px] focus:translate-x-[2px] ${extra}`
+  if (isHighlighted) return `${base} ring-4 ring-red-500/20 border-red-500`
+  if (hasErr)        return `${base} border-red-500 bg-red-50`
+  return `${base}`
 }
 
 function ErrMsg({ msg }: { msg: string }) {
@@ -139,8 +140,8 @@ function ErrMsg({ msg }: { msg: string }) {
 function SectionHeader({ title, onAdd, index }: { title: string; onAdd: () => void; index: string }) {
   return (
     <div className="flex items-center justify-between mb-4">
-      <h2 className="text-zinc-900 font-black text-xl tracking-tight flex items-center gap-2"><span className="text-[var(--fpt-orange)]">{index}.</span> {title}</h2>
-      <button type="button" onClick={onAdd} className="text-sm font-bold bg-[var(--fpt-orange)]/10 text-[var(--fpt-orange)] hover:bg-[var(--fpt-orange)] hover:text-white px-3 py-1.5 rounded-lg transition-colors">
+      <h2 className="text-zinc-900 font-black text-2xl tracking-tighter uppercase flex items-center gap-3"><span className="text-[var(--fpt-orange)] px-2 bg-yellow-300 border-2 border-black shadow-[2px_2px_0_0_#000] rounded">{index}.</span> {title}</h2>
+      <button type="button" onClick={onAdd} className="text-[12px] font-black uppercase tracking-widest bg-yellow-300 border-2 border-black text-black hover:bg-[var(--fpt-orange)] hover:text-white px-4 py-2 rounded-xl shadow-[2px_2px_0_0_#000] hover:shadow-[4px_4px_0_0_#000] transition-all hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none">
         + Thêm
       </button>
     </div>
@@ -150,9 +151,9 @@ function SectionHeader({ title, onAdd, index }: { title: string; onAdd: () => vo
 function RemoveBtn({ onClick }: { onClick: () => void }) {
   return (
     <button type="button" onClick={onClick}
-      className="absolute top-4 right-4 text-zinc-400 hover:text-red-500 bg-zinc-100 hover:bg-red-50 rounded-full p-1.5 transition-colors"
+      className="absolute top-6 right-6 text-black border-2 border-black bg-zinc-100 hover:bg-red-400 hover:text-white shadow-[2px_2px_0_0_#000] hover:shadow-none hover:translate-y-0.5 rounded-full p-1.5 transition-all"
       aria-label="Xóa">
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+      <svg className="w-4 h-4 stroke-[3px]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
     </button>
   )
 }
@@ -165,6 +166,7 @@ function MagicTextarea({
   placeholder,
   hasError,
   isHighlighted,
+  isPro,
 }: {
   id: string
   value: string
@@ -173,13 +175,19 @@ function MagicTextarea({
   placeholder: string
   hasError: boolean
   isHighlighted: boolean
+  isPro?: boolean
 }) {
+  const router = useRouter()
   const [isGenerating, setIsGenerating] = useState(false)
   const [aiText, setAiText] = useState('')
   const [showAi, setShowAi] = useState(false)
 
   const handleMagic = async () => {
     if (!value.trim()) return
+    if (!isPro) {
+      router.push('/upgrade')
+      return
+    }
     setIsGenerating(true)
     setShowAi(true)
     setAiText('')
@@ -216,10 +224,10 @@ function MagicTextarea({
           <button 
             type="button"
             onClick={handleMagic}
-            className="absolute bottom-4 right-4 bg-zinc-900 text-white p-2 rounded-xl shadow-lg opacity-0 group-hover/magic:opacity-100 transition-all hover:bg-[var(--fpt-orange)] hover:scale-110 z-20"
-            title="Sửa văn phong bằng AI"
+            className={`absolute bottom-4 right-4 ${isPro ? 'bg-zinc-900 text-white hover:bg-[var(--fpt-orange)]' : 'bg-yellow-400 text-black border-2 border-black'} px-3 py-2 rounded-xl shadow-lg opacity-0 group-hover/magic:opacity-100 transition-all hover:scale-110 z-20 flex items-center gap-1.5 font-bold text-[11px] uppercase tracking-widest`}
+            title={isPro ? 'Sửa văn phong bằng AI' : 'Nâng cấp Pro để mở khóa'}
           >
-            🪄
+            🪄 {isPro ? 'AI Tối Ưu' : 'Pro'}
           </button>
         )}
       </div>
@@ -260,6 +268,7 @@ export default function CvForm({ mode, initialData, cvId }: Props) {
   const [saveError, setSaveError]     = useState('')
   const [limitReached, setLimitReached] = useState(false)
   const [highlighted, setHighlighted] = useState('')
+  const [isPro, setIsPro]             = useState(false)
 
   // ── Seed form state from initialData (edit) or blank (create) ─────────────
   const initEdu   = initialData?.content.education?.length  ? initialData.content.education  : [{ school: '', major: '', year: '' }]
@@ -299,9 +308,13 @@ export default function CvForm({ mode, initialData, cvId }: Props) {
     : 'Cần bổ sung'
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) router.push('/login')
-      else setAuthLoading(false)
+      else {
+        const plan = await getUserPlan(supabase, session.user.id)
+        setIsPro(plan.isPro)
+        setAuthLoading(false)
+      }
     })
   }, [router])
 
@@ -459,80 +472,81 @@ export default function CvForm({ mode, initialData, cvId }: Props) {
   }
 
   return (
-    <div className="h-screen w-full flex bg-zinc-50 overflow-hidden relative">
+    <div className="h-screen w-full flex flex-col bg-zinc-50 overflow-hidden relative">
       
-      {/* ── BÊN TRÁI: Form Nhập Liệu (Focus Mode) ── */}
-      <div className="w-full lg:w-[40%] flex flex-col h-full bg-white border-r border-zinc-200/80 shadow-2xl z-10 relative">
+      {/* ── TOP BAR (Neo-Brutalism) ── */}
+      <header className="h-20 w-full bg-white border-b-4 border-black flex items-center justify-between px-4 md:px-6 z-50 shrink-0 shadow-[0_4px_0_0_#000]">
+        <div className="flex items-center gap-4 w-1/3">
+          <button onClick={() => router.push('/dashboard')} className="text-black font-black uppercase tracking-widest text-[13px] px-4 py-2.5 border-2 border-black rounded-xl hover:-translate-y-1 hover:shadow-[4px_4px_0_0_#000] active:translate-y-0 active:shadow-none transition-all flex items-center gap-2 bg-zinc-100">
+            <span className="hidden md:inline">← Dashboard</span>
+            <span className="md:hidden">←</span>
+          </button>
+        </div>
         
-        {/* Floating Dock Toolbar */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50 pointer-events-auto">
-          <motion.div 
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            className="bg-white/90 backdrop-blur-xl border border-zinc-200 shadow-2xl rounded-full px-6 py-4 flex items-center gap-6"
-          >
-            <button type="button" onClick={() => router.push('/dashboard')} className="text-zinc-500 hover:text-zinc-900 font-bold text-sm transition-colors flex items-center gap-2 whitespace-nowrap group">
-              <span className="group-hover:-translate-x-1 transition-transform">←</span> Dashboard
-            </button>
-            
-            <div className="w-px h-6 bg-zinc-200" />
-            
-            <div className="flex items-center gap-4">
-              {saving ? (
-                <span className="text-[var(--fpt-orange)] text-[13px] font-bold animate-pulse whitespace-nowrap">Đang lưu...</span>
-              ) : saveError ? (
-                <span className="text-red-500 text-[13px] font-bold whitespace-nowrap">{saveError}</span>
-              ) : limitReached ? (
-                <span className="text-red-500 text-[13px] font-bold whitespace-nowrap">Hết hạn mức</span>
-              ) : (
-                 <span className="text-green-600 text-[13px] font-bold opacity-0 hidden md:block">Đã lưu</span>
-              )}
-              
-              <button onClick={handleSave} disabled={saving} className="bg-[var(--fpt-orange)] hover:bg-orange-600 text-white font-bold text-sm px-8 py-3 rounded-full shadow-[0_0_20px_-5px_#f26f21] hover:shadow-[0_0_30px_-5px_#f26f21] transition-all hover:scale-105 active:scale-95 disabled:opacity-50 whitespace-nowrap">
-                Lưu CV
-              </button>
-            </div>
-          </motion.div>
+        <div className="flex-1 flex justify-center items-center w-1/3">
+           <input
+             value={title}
+             onChange={e => setTitle(e.target.value)}
+             onBlur={() => touch('title')}
+             placeholder="Tên file CV..."
+             className="bg-transparent border-none text-center font-black text-lg md:text-xl placeholder-zinc-300 focus:outline-none focus:ring-0 w-full max-w-[400px] hover:bg-zinc-100 rounded-xl px-4 py-2 transition-colors truncate"
+           />
         </div>
 
+        <div className="flex items-center justify-end gap-3 md:gap-4 w-1/3">
+           {saving ? (
+             <span className="text-[var(--fpt-orange)] text-[13px] font-bold animate-pulse whitespace-nowrap hidden md:block">Đang lưu...</span>
+           ) : saveError ? (
+             <span className="text-red-500 text-[13px] font-bold whitespace-nowrap hidden md:block">{saveError}</span>
+           ) : limitReached ? (
+             <span className="text-red-500 text-[13px] font-bold whitespace-nowrap hidden md:block">Hết hạn mức</span>
+           ) : (
+              <span className="text-green-600 font-black text-[13px] uppercase tracking-widest hidden md:block opacity-0">✓ Đã lưu</span>
+           )}
+           
+           <button onClick={handleSave} disabled={saving} className="bg-[var(--fpt-orange)] text-white font-black uppercase tracking-widest text-[12px] md:text-[13px] px-5 md:px-6 py-2.5 border-2 border-black rounded-xl shadow-[4px_4px_0_0_#000] hover:-translate-y-1 hover:shadow-[6px_6px_0_0_#000] active:translate-y-0 active:shadow-none transition-all disabled:opacity-50 whitespace-nowrap">
+             Lưu CV
+           </button>
+
+           {cvId && (
+             <button onClick={() => router.push(`/cv/${cvId}/view`)} className="bg-black text-white font-black uppercase tracking-widest text-[12px] md:text-[13px] px-5 md:px-6 py-2.5 border-2 border-black rounded-xl shadow-[4px_4px_0_0_var(--fpt-orange)] hover:-translate-y-1 hover:shadow-[6px_6px_0_0_var(--fpt-orange)] active:translate-y-0 active:shadow-none transition-all hidden lg:block whitespace-nowrap">
+               Xuất PDF →
+             </button>
+           )}
+        </div>
+      </header>
+
+      {/* ── MAIN WORKSPACE ── */}
+      <div className="flex-1 w-full flex overflow-hidden">
+        
+        {/* ── BÊN TRÁI: Form Nhập Liệu (Focus Mode) ── */}
+        <div className="w-full lg:w-[40%] flex flex-col h-full bg-[#f8f9fa] border-r-4 border-black z-10 relative">
+
         {/* Form Body */}
-        <div className="flex-1 overflow-y-auto p-6 lg:p-10 scroll-smooth">
+        <div className="flex-1 overflow-y-auto p-6 lg:p-10 scroll-smooth pb-32">
           <div className="max-w-[600px] mx-auto">
             {/* Thanh độ hoàn thiện CV (live ATS preview) */}
-            <div className="mb-12 bg-white border-2 border-zinc-100 rounded-[2rem] px-8 py-6 shadow-xl shadow-zinc-100/50 flex flex-col gap-4 transition-all duration-300 hover:border-zinc-200">
+            <div className="mb-12 bg-white border-4 border-black rounded-[2rem] px-8 py-6 shadow-[8px_8px_0_0_#000] flex flex-col gap-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-[12px_12px_0_0_#000]">
               <div className="flex items-center justify-between">
                 <span className="text-xs text-zinc-500 font-black uppercase tracking-[0.15em]">Độ hoàn thiện CV (ước tính ATS)</span>
-                <span className="text-[13px] font-black px-4 py-1.5 bg-zinc-50 rounded-xl border border-zinc-100 shadow-sm" style={{ color: strengthColor }}>
+                <span className="text-[13px] font-black px-4 py-1.5 bg-zinc-50 rounded-xl border-2 border-black shadow-[2px_2px_0_0_#000]" style={{ color: strengthColor }}>
                   {strength.score}/100 · {strengthLabel}
                 </span>
               </div>
-              <div className="h-2.5 rounded-full bg-zinc-100 overflow-hidden">
+              <div className="h-4 border-2 border-black rounded-full bg-zinc-100 overflow-hidden relative">
                 <div
-                  className="h-full rounded-full transition-all duration-500"
+                  className="h-full border-r-2 border-black transition-all duration-500"
                   style={{ width: `${strength.score}%`, background: strengthColor }}
                 />
               </div>
             </div>
 
-            {/* ── Tiêu đề CV ── */}
-            <section className="mb-10">
-              <label htmlFor="field-title" className="text-zinc-900 text-sm mb-2 block font-bold">
-                Tên file CV <span className="text-zinc-400 font-medium">(Không hiển thị trong bản in)</span>
-              </label>
-              <input
-                id="field-title" type="text" value={title}
-                onChange={e => setTitle(e.target.value)}
-                onBlur={() => touch('title')}
-                placeholder="VD: CV Lập trình viên Frontend – Nguyễn Văn A"
-                className={fieldCls('', touched.title && !!errors.title, hi === 'field-title')}
-              />
-              {touched.title && <ErrMsg msg={errors.title} />}
-            </section>
+            {touched.title && <ErrMsg msg={errors.title} />}
 
             {/* ── Thông tin cá nhân ── */}
-            <section className="mb-10">
-              <h2 className="text-zinc-900 font-black text-xl tracking-tight mb-4 flex items-center gap-2"><span className="text-[var(--fpt-orange)]">01.</span> Thông tin cá nhân</h2>
-              <div className="bg-white border-2 border-zinc-100 shadow-xl shadow-zinc-100/50 rounded-[2rem] p-8 flex flex-col gap-6 transition-all duration-500 focus-within:border-[var(--fpt-orange)] focus-within:shadow-[0_25px_50px_-12px_rgba(242,111,33,0.15)] focus-within:scale-[1.01]">
+            <section className="mb-12">
+              <h2 className="text-zinc-900 font-black text-2xl tracking-tighter uppercase mb-6 flex items-center gap-3"><span className="text-[var(--fpt-orange)] px-2 bg-yellow-300 border-2 border-black shadow-[2px_2px_0_0_#000] rounded">01.</span> Thông tin cá nhân</h2>
+              <div className="bg-white border-4 border-black shadow-[8px_8px_0_0_#000] rounded-[2.5rem] p-8 md:p-10 flex flex-col gap-6 transition-all duration-500 focus-within:-translate-y-1 focus-within:shadow-[12px_12px_0_0_#000]">
                 <div>
                   <label htmlFor="field-name" className="text-zinc-500 text-[13px] font-semibold mb-1.5 block">Họ và tên</label>
                   <input
@@ -574,9 +588,9 @@ export default function CvForm({ mode, initialData, cvId }: Props) {
             {/* ── Học vấn ── */}
             <section className="mb-10">
               <SectionHeader title="Học vấn" onAdd={addEducation} index="02" />
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-6">
                 {education.map((edu, i) => (
-                  <div key={i} className="bg-white border-2 border-zinc-100 shadow-xl shadow-zinc-100/50 rounded-[2rem] p-8 relative transition-all duration-500 focus-within:border-[var(--fpt-orange)] focus-within:shadow-[0_25px_50px_-12px_rgba(242,111,33,0.15)] focus-within:scale-[1.01]">
+                  <div key={i} className="bg-white border-4 border-black shadow-[8px_8px_0_0_#000] rounded-[2.5rem] p-8 md:p-10 relative transition-all duration-500 focus-within:-translate-y-1 focus-within:shadow-[12px_12px_0_0_#000]">
                     {education.length > 1 && <RemoveBtn onClick={() => removeEducation(i)} />}
                     <div className="flex flex-col gap-6">
                       <div>
@@ -636,8 +650,8 @@ export default function CvForm({ mode, initialData, cvId }: Props) {
                       />
                       {skills.length > 1 && (
                         <button type="button" onClick={() => removeSkill(i)}
-                          className="text-zinc-400 hover:text-red-500 bg-white border border-zinc-200 shadow-sm hover:bg-red-50 rounded-xl p-2.5 transition-colors shrink-0">
-                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                          className="text-black hover:text-white bg-white border-2 border-black shadow-[2px_2px_0_0_#000] hover:bg-red-500 hover:shadow-none hover:translate-y-0.5 rounded-xl p-3 transition-all shrink-0">
+                          <svg className="w-5 h-5 stroke-[3px]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                         </button>
                       )}
                     </div>
@@ -650,9 +664,9 @@ export default function CvForm({ mode, initialData, cvId }: Props) {
             {/* ── Dự án ── */}
             <section className="mb-10">
               <SectionHeader title="Dự án / Project" onAdd={addProject} index="04" />
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-6">
                 {projects.map((project, i) => (
-                  <div key={i} className="bg-white border-2 border-zinc-100 shadow-xl shadow-zinc-100/50 rounded-[2rem] p-8 relative transition-all duration-500 focus-within:border-[var(--fpt-orange)] focus-within:shadow-[0_25px_50px_-12px_rgba(242,111,33,0.15)] focus-within:scale-[1.01]">
+                  <div key={i} className="bg-white border-4 border-black shadow-[8px_8px_0_0_#000] rounded-[2.5rem] p-8 md:p-10 relative transition-all duration-500 focus-within:-translate-y-1 focus-within:shadow-[12px_12px_0_0_#000]">
                     {projects.length > 1 && <RemoveBtn onClick={() => removeProject(i)} />}
                     <div className="flex flex-col gap-6">
                       <div>
@@ -675,6 +689,7 @@ export default function CvForm({ mode, initialData, cvId }: Props) {
                           placeholder="- Xây dựng hệ thống bằng React, Node.js...&#10;- Tối ưu hóa hiệu năng tăng 30%...&#10;- Vai trò: Nhóm trưởng..."
                           hasError={!!touched.projects[i]?.description && !!errors.projects[i]?.description}
                           isHighlighted={hi === `field-project-${i}-desc`}
+                          isPro={isPro}
                         />
                         {touched.projects[i]?.description && <ErrMsg msg={errors.projects[i]?.description ?? ''} />}
                       </div>
@@ -700,13 +715,14 @@ export default function CvForm({ mode, initialData, cvId }: Props) {
                           placeholder="VD: Thành viên CLB Lập trình FPT, tham gia tổ chức sự kiện..."
                           hasError={!!touched.activities[i] && !!errors.activities[i]}
                           isHighlighted={hi === `field-activity-${i}`}
+                          isPro={isPro}
                         />
                       </div>
                       <div className="shrink-0 mt-2">
                         {activities.length > 1 && (
                           <button type="button" onClick={() => removeActivity(i)}
-                            className="text-zinc-400 hover:text-red-500 bg-white border border-zinc-200 shadow-sm hover:bg-red-50 rounded-xl p-2.5 transition-colors">
-                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                            className="text-black hover:text-white bg-white border-2 border-black shadow-[2px_2px_0_0_#000] hover:bg-red-500 hover:shadow-none hover:translate-y-0.5 rounded-xl p-3 transition-all shrink-0">
+                            <svg className="w-5 h-5 stroke-[3px]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                           </button>
                         )}
                       </div>
@@ -723,21 +739,16 @@ export default function CvForm({ mode, initialData, cvId }: Props) {
       </div>
 
       {/* ── BÊN PHẢI: Live Preview ── */}
-      <div className="hidden lg:flex lg:w-[60%] h-full bg-zinc-950 items-start justify-center p-8 overflow-y-auto relative shadow-inner">
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay pointer-events-none"></div>
-        {cvId && (
-          <div className="absolute top-6 right-6 z-20">
-             <button onClick={() => router.push(`/cv/${cvId}/view`)} className="bg-white border border-zinc-200 text-zinc-700 text-sm font-bold px-4 py-2.5 rounded-xl shadow-soft-sm hover:bg-zinc-50 transition-colors">
-                Đổi mẫu / Tải PDF →
-             </button>
-          </div>
-        )}
-        <div className="w-full max-w-[800px] mt-4">
-           {/* Render Live Preview */}
-           <div className="bg-white shadow-2xl rounded-sm overflow-hidden pointer-events-none scale-90 origin-top">
+      <div className="hidden lg:flex lg:w-[60%] h-full bg-zinc-900 items-center justify-center p-8 overflow-y-auto relative border-l-4 border-black">
+        {/* Subtle grid pattern background */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+        <div className="w-full max-w-[800px] mt-4 relative z-10 flex justify-center items-center">
+           {/* Render Live Preview with huge shadow and tilt */}
+           <div className="bg-white border border-zinc-200 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8)] rounded-sm overflow-hidden pointer-events-none scale-90 md:scale-95 lg:scale-100 origin-center transition-transform duration-500 hover:scale-[1.02]">
              <Preview data={contentPreview} />
            </div>
         </div>
+      </div>
       </div>
     </div>
   )

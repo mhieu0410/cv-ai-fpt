@@ -56,30 +56,28 @@ export default function ResetPasswordPage() {
 
   if (!sessionChecked) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-zinc-50 flex items-center justify-center p-6">
+        <div className="w-12 h-12 border-4 border-black border-t-var(--fpt-orange) rounded-full animate-spin" />
       </div>
     )
   }
 
   if (!hasSession) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
-        <div className="w-full max-w-md bg-gray-900 rounded-2xl p-8 shadow-xl border border-gray-800 text-center">
-          <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
-            <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+      <div className="min-h-screen bg-zinc-50 flex items-center justify-center p-6">
+        <div className="w-full max-w-md bg-white rounded-2xl p-8 sm:p-12 border-4 border-black shadow-[8px_8px_0_0_#000] text-center">
+          <div className="w-16 h-16 rounded-2xl bg-red-100 flex items-center justify-center mx-auto mb-6 border-2 border-black shadow-[4px_4px_0_0_#000] transform rotate-3">
+            <span className="text-3xl">🚫</span>
           </div>
-          <h2 className="text-xl font-semibold text-white mb-2">Link không hợp lệ</h2>
-          <p className="text-gray-400 text-sm">
-            Link không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu lại.
+          <h2 className="text-3xl font-black text-black tracking-tight uppercase mb-4">Link không hợp lệ</h2>
+          <p className="text-zinc-600 font-bold mb-8">
+            Link đổi mật khẩu đã hết hạn hoặc không tồn tại.
           </p>
           <a
             href="/forgot-password"
-            className="mt-5 inline-block text-sm text-violet-400 hover:text-violet-300 transition-colors"
+            className="w-full inline-block py-4 rounded-xl bg-black text-white font-black uppercase text-[13px] tracking-widest hover:bg-zinc-800 transition-all active:scale-95 shadow-[4px_4px_0_0_var(--fpt-orange)]"
           >
-            Yêu cầu link mới →
+            Yêu cầu link mới
           </a>
         </div>
       </div>
@@ -88,70 +86,74 @@ export default function ResetPasswordPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
-        <div className="w-full max-w-md bg-gray-900 rounded-2xl p-8 shadow-xl border border-gray-800 text-center">
-          <div className="w-12 h-12 rounded-full bg-violet-600/20 flex items-center justify-center mx-auto mb-4">
-            <svg className="w-6 h-6 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
+      <div className="min-h-screen bg-zinc-50 flex items-center justify-center p-6">
+        <div className="w-full max-w-md bg-white rounded-2xl p-8 sm:p-12 border-4 border-black shadow-[8px_8px_0_0_#000] text-center">
+          <div className="w-16 h-16 rounded-2xl bg-green-200 flex items-center justify-center mx-auto mb-6 border-2 border-black shadow-[4px_4px_0_0_#000] transform -rotate-3">
+            <span className="text-3xl">✅</span>
           </div>
-          <h2 className="text-xl font-semibold text-white mb-2">Mật khẩu đã được cập nhật</h2>
-          <p className="text-gray-400 text-sm">Đang chuyển về dashboard...</p>
-          <div className="mt-4 flex justify-center">
-            <div className="w-5 h-5 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
-          </div>
+          <h2 className="text-3xl font-black text-black tracking-tight uppercase mb-4">Thành công!</h2>
+          <p className="text-zinc-600 font-bold mb-8">Mật khẩu đã được cập nhật thành công. Đang chuyển về Dashboard...</p>
+          <div className="w-8 h-8 border-4 border-black border-t-green-500 rounded-full animate-spin mx-auto" />
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
-      <div className="w-full max-w-md bg-gray-900 rounded-2xl p-8 shadow-xl border border-gray-800">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-white mb-2">Tạo mật khẩu mới</h1>
-          <p className="text-gray-400 text-sm">Mật khẩu phải có ít nhất 6 ký tự.</p>
+    <div className="min-h-screen bg-zinc-50 flex items-center justify-center p-6">
+      <div className="w-full max-w-md bg-white rounded-2xl p-8 sm:p-12 border-4 border-black shadow-[8px_8px_0_0_#C4A1FF]">
+        <div className="flex items-center gap-3 mb-8 justify-center">
+          <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-[4px_4px_0_0_rgba(0,0,0,0.3)] border-2 border-black">
+            <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="4" y="4" width="16" height="16" stroke="black" strokeWidth="3" fill="#C4A1FF" />
+              <rect x="12" y="12" width="16" height="16" stroke="black" strokeWidth="3" fill="var(--fpt-orange)" />
+            </svg>
+          </div>
+          <span className="text-black text-2xl font-black tracking-tighter uppercase">CV AI</span>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="password" className="text-sm text-gray-300">
-              Mật khẩu mới
-            </label>
+        <div className="mb-8 text-center">
+          <h1 className="text-3xl font-black text-black tracking-tight uppercase mb-2">Đổi mật khẩu</h1>
+          <p className="text-zinc-500 font-bold text-[15px]">
+            Tạo mật khẩu mới cho tài khoản của bạn.
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+          <div>
+            <label className="text-black font-black uppercase tracking-wider text-[11px] mb-2 block">Mật khẩu mới</label>
             <input
-              id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               required
-              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition"
+              className="w-full bg-white text-black border-2 border-zinc-200 rounded-xl px-4 py-3.5 focus:outline-none focus:border-black focus:ring-4 focus:ring-zinc-100 hover:border-zinc-300 placeholder-zinc-400 text-[15px] font-bold shadow-sm transition-all"
             />
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="confirm" className="text-sm text-gray-300">
-              Xác nhận mật khẩu
-            </label>
+          <div>
+            <label className="text-black font-black uppercase tracking-wider text-[11px] mb-2 block">Xác nhận mật khẩu mới</label>
             <input
-              id="confirm"
               type="password"
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
               placeholder="••••••••"
               required
-              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition"
+              className="w-full bg-white text-black border-2 border-zinc-200 rounded-xl px-4 py-3.5 focus:outline-none focus:border-black focus:ring-4 focus:ring-zinc-100 hover:border-zinc-300 placeholder-zinc-400 text-[15px] font-bold shadow-sm transition-all"
             />
           </div>
 
           {error && (
-            <p className="text-red-400 text-sm">{error}</p>
+            <p className="text-red-900 text-[13px] font-bold bg-red-100 border-l-4 border-red-500 px-4 py-3">
+              ⚠️ {error}
+            </p>
           )}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 rounded-xl font-medium text-white bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
+            className="w-full bg-black hover:bg-zinc-800 text-white font-black uppercase tracking-widest text-[13px] py-4 rounded-xl shadow-[4px_4px_0_0_#C4A1FF] transition-all hover:translate-y-1 hover:shadow-[0px_0px_0_0_#C4A1FF] active:scale-95 disabled:opacity-50 mt-2"
           >
             {loading ? 'Đang cập nhật...' : 'Cập nhật mật khẩu'}
           </button>
