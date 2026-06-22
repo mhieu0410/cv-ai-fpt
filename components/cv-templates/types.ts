@@ -21,5 +21,5 @@ export interface TemplateMeta {
   category: string
   isPro: boolean
   Preview: ComponentType<{ data: CvData }>
-  Pdf: ComponentType<{ data: CvData }>
+  Pdf: ComponentType<{ data: CvData; isPro?: boolean }>
 }

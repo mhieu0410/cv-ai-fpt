@@ -6,6 +6,7 @@ import {
   StyleSheet,
 } from '@react-pdf/renderer'
 import type { CvData } from '../types'
+import { WatermarkPdf } from '../WatermarkPdf'
 
 // Font 'BeVietnamPro' đã được Font.register trong classic/pdf.tsx (luôn được load
 // cùng qua registry). Không đăng ký lại ở đây để tránh đăng ký trùng lặp.
@@ -92,12 +93,13 @@ const s = StyleSheet.create({
   actText: { fontSize: 9, color: '#444', lineHeight: 1.5 },
 })
 
-export function ModernTechPdf({ data }: { data: CvData }) {
+export function ModernTechPdf({ data, isPro }: { data: CvData; isPro?: boolean }) {
   const { personal, education, skills, projects, activities } = data
 
   return (
     <Document title={personal.name}>
       <Page size="A4" style={s.page}>
+        <WatermarkPdf isPro={isPro} />
 
         {/* Cột trái — sidebar */}
         <View style={s.sidebar}>

@@ -14,6 +14,9 @@ export default function CheckoutClient() {
   const [status, setStatus] = useState<'loading' | 'waiting' | 'success'>('loading')
   const [amount] = useState(CONFIG.proPrice)
 
+  const [verifying, setVerifying] = useState(false)
+  const [error, setError] = useState('')
+
   useEffect(() => {
     async function load() {
       const { data: { session } } = await supabase.auth.getSession()
@@ -27,18 +30,37 @@ export default function CheckoutClient() {
     load()
   }, [orderId, router])
 
-  // Giả lập trạng thái thanh toán thành công
-  useEffect(() => {
-    if (status === 'success') {
-      const t = setTimeout(() => {
+  async function handleVerify() {
+    if (verifying) return
+    setVerifying(true)
+    setError('')
+
+    try {
+      // Simulate banking delay
+      await new Promise(res => setTimeout(res, 2000))
+
+      const res = await fetch(`/api/orders/${orderId}/verify`, {
+        method: 'POST'
+      })
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Lỗi xác thực thanh toán')
+      }
+
+      setStatus('success')
+      setTimeout(() => {
         router.push('/dashboard?success=pro')
       }, 2500)
-      return () => clearTimeout(t)
+    } catch (err: any) {
+      setError(err.message || 'Không thể xác nhận giao dịch. Vui lòng thử lại.')
+      setVerifying(false)
     }
-  }, [status, router])
+  }
 
   // Fake QR generation
-  const qrUrl = `https://img.vietqr.io/image/MB-0901234567-compact2.png?amount=${amount}&addInfo=Thanh toan CV Pro ${orderId}&accountName=FPT CV Builder`
+  const encodedAccountName = encodeURIComponent(CONFIG.bank.holder || 'FPT CV Builder')
+  const qrUrl = `https://img.vietqr.io/image/${CONFIG.bank.bin}-${CONFIG.bank.account}-compact2.png?amount=${amount}&addInfo=Thanh toan CV Pro ${orderId}&accountName=${encodedAccountName}`
 
   if (status === 'loading') {
     return (
@@ -93,7 +115,7 @@ export default function CheckoutClient() {
                 />
               </div>
 
-              <div className="mt-8 text-center space-y-4">
+              <div className="mt-8 text-center space-y-4 w-full">
                 <div className="text-white text-4xl font-black tracking-tighter neo-shadow-text">
                   {(amount).toLocaleString('vi-VN')}đ
                 </div>
@@ -101,15 +123,21 @@ export default function CheckoutClient() {
                   <ShieldCheck className="w-4 h-4 text-green-400" />
                   Giao dịch mã hoá an toàn
                 </div>
-              </div>
 
-              {/* Development helper - Nút giả lập */}
-              <button 
-                onClick={() => setStatus('success')}
-                className="mt-8 text-[11px] font-bold uppercase tracking-widest text-zinc-500 hover:text-white underline underline-offset-4 decoration-zinc-700 transition-colors"
-              >
-                (Dev) Click để giả lập thanh toán 1-chạm
-              </button>
+                {error && (
+                  <div className="mt-4 p-3 border-2 border-red-500 bg-red-500/20 text-red-200 text-sm font-bold rounded-xl">
+                    {error}
+                  </div>
+                )}
+
+                <button 
+                  onClick={handleVerify}
+                  disabled={verifying}
+                  className="w-full mt-6 py-4 px-6 bg-[var(--fpt-orange)] text-white font-black uppercase tracking-widest rounded-2xl shadow-[0_0_20px_-5px_#f26f21] hover:shadow-[0_0_40px_-5px_#f26f21] transition-all disabled:opacity-50 disabled:shadow-none hover:-translate-y-1 active:scale-95 border-4 border-transparent"
+                >
+                  {verifying ? 'ĐANG KIỂM TRA GD...' : 'TÔI ĐÃ CHUYỂN KHOẢN'}
+                </button>
+              </div>
             </div>
           </motion.div>
         ) : (

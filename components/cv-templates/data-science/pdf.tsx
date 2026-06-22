@@ -1,5 +1,6 @@
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer'
 import type { CvData } from '../types'
+import { WatermarkPdf } from '../WatermarkPdf'
 
 const SLATE = '#0F172A'
 const CYAN = '#06B6D4'
@@ -25,11 +26,12 @@ const s = StyleSheet.create({
   actText: { fontSize: 9, color: '#444', lineHeight: 1.5, marginBottom: 4 },
 })
 
-export function DataSciencePdf({ data }: { data: CvData }) {
+export function DataSciencePdf({ data, isPro }: { data: CvData; isPro?: boolean }) {
   const { personal, education, skills, projects, activities } = data
   return (
     <Document title={personal.name}>
       <Page size="A4" style={s.page}>
+        <WatermarkPdf isPro={isPro} />
         <View style={s.header}>
           <Text style={s.name}>{personal.name}</Text>
           <View style={s.contactRow}>
