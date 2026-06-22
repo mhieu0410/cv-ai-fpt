@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 import React, { useRef, useMemo } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
@@ -39,18 +38,19 @@ function BackgroundPlane() {
   );
 }
 
+const STAR_COUNT = 800;
+const STAR_POSITIONS = new Float32Array(STAR_COUNT * 3);
+for (let i = 0; i < STAR_COUNT; i++) {
+  STAR_POSITIONS[i * 3]     = (Math.random() - 0.5) * 60;
+  STAR_POSITIONS[i * 3 + 1] = (Math.random() - 0.5) * 40;
+  STAR_POSITIONS[i * 3 + 2] = -5 - Math.random() * 20;
+}
+
 function Starfield() {
   const ref = useRef<THREE.Points>(null);
   const geo = useMemo(() => {
-    const count = 800;
-    const pos = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) {
-      pos[i * 3]     = (Math.random() - 0.5) * 60;
-      pos[i * 3 + 1] = (Math.random() - 0.5) * 40;
-      pos[i * 3 + 2] = -5 - Math.random() * 20;
-    }
     const g = new THREE.BufferGeometry();
-    g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    g.setAttribute("position", new THREE.BufferAttribute(STAR_POSITIONS, 3));
     return g;
   }, []);
   useFrame(({ clock }) => {
@@ -64,22 +64,28 @@ function Starfield() {
 }
 
 function GridFloor() {
-  const grid = useMemo(() => {
-    const g = new THREE.GridHelper(40, 40, new THREE.Color("#001a3b"), new THREE.Color("#000814"));
-    const m = g.material as THREE.LineBasicMaterial;
-    m.transparent = true; m.opacity = 0.15;
-    return g;
-  }, []);
+  const gridRef = useRef<THREE.GridHelper>(null);
+  
   useFrame(({ clock }) => {
-    (grid.material as THREE.LineBasicMaterial).opacity = 0.12 + Math.sin(clock.elapsedTime * 0.4) * 0.06;
+    if (gridRef.current) {
+      const material = gridRef.current.material as THREE.LineBasicMaterial;
+      if (material) {
+        material.opacity = 0.12 + Math.sin(clock.elapsedTime * 0.4) * 0.06;
+      }
+    }
   });
-  return <primitive object={grid} position={[0, -4.5, 0]} />;
+
+  return (
+    <gridHelper ref={gridRef} args={[40, 40, "#001a3b", "#000814"]} position={[0, -4.5, 0]}>
+      <lineBasicMaterial attach="material" transparent opacity={0.15} vertexColors toneMapped={false} />
+    </gridHelper>
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────
 // 4. ENERGY RIBBON — Uses high intensity color to trigger Bloom
 // ─────────────────────────────────────────────────────────────────────
-function EnergyRibbon({ color, speed = 0.22, tiltX = 0.4, tiltZ = 0.15, radiusX = 3.8, radiusY = 1.4, radiusZ = 2.2, tubeRadius = 0.022, opacity = 0.8, glowOpacity = 0.15 }: any) {
+function EnergyRibbon({ color, speed = 0.22, tiltX = 0.4, tiltZ = 0.15, radiusX = 3.8, radiusY = 1.4, radiusZ = 2.2, tubeRadius = 0.022, opacity = 0.8, glowOpacity = 0.15 }: { color: THREE.Color, speed?: number, tiltX?: number, tiltZ?: number, radiusX?: number, radiusY?: number, radiusZ?: number, tubeRadius?: number, opacity?: number, glowOpacity?: number }) {
   const groupRef = useRef<THREE.Group>(null);
   const { innerGeo, outerGeo } = useMemo(() => {
     const SEGS = 320;
@@ -120,7 +126,7 @@ function EnergyRibbon({ color, speed = 0.22, tiltX = 0.4, tiltZ = 0.15, radiusX 
 // ─────────────────────────────────────────────────────────────────────
 // 5. SHADOW CARD
 // ─────────────────────────────────────────────────────────────────────
-function ShadowCard({ opacity = 0.28, edgeOpacity = 0.35 }: any) {
+function ShadowCard({ opacity = 0.28, edgeOpacity = 0.35 }: { opacity?: number, edgeOpacity?: number }) {
   const W = 2.85, H = 4.05;
   return (
     <group>
@@ -330,7 +336,7 @@ function ScorePanel({ currentPhase }: { currentPhase: number }) {
           transition: "border-color 0.4s ease-out, box-shadow 0.4s ease-out",
         }}>
           <div style={{ color: "rgba(0,212,255,0.5)", fontSize: "9px", letterSpacing: "0.15em", marginBottom: "8px" }}>
-            // ATS SCORE
+            {"// ATS SCORE"}
           </div>
           <div style={{ fontSize: "28px", fontWeight: "800", letterSpacing: "-0.02em", marginBottom: "6px", color: highlighted ? "#fff" : "rgba(0,212,255,0.90)", textShadow: highlighted ? "0 0 12px rgba(0,212,255,0.8)" : "none" }}>
             91.3%
@@ -456,16 +462,12 @@ function Scene({ scrollYProgress, currentPhase }: { scrollYProgress: MotionValue
 }
 
 function PostProcessing() {
-  // @ts-ignore - React 19 type mismatch in postprocessing
   return (
+    // @ts-expect-error - React 19 type mismatch in EffectComposer
     <EffectComposer disableNormalPass multisampling={0}>
-      {/* @ts-ignore */}
       <Bloom luminanceThreshold={1.2} luminanceSmoothing={0.9} intensity={1.5} mipmapBlur={true} />
-      {/* @ts-ignore */}
       <ChromaticAberration offset={new THREE.Vector2(0.0008, 0.0008)} blendFunction={BlendFunction.NORMAL} radialModulation={false} modulationOffset={0} />
-      {/* @ts-ignore */}
       <Vignette eskil={false} offset={0.1} darkness={0.9} />
-      {/* @ts-ignore */}
       <Noise opacity={0.025} />
     </EffectComposer>
   );

@@ -47,7 +47,7 @@ export default async function SharedCvPage({
       </header>
 
       <main className="max-w-3xl mx-auto px-4 py-10">
-        <p className="text-zinc-500 text-xs mb-6 text-center">CV được chia sẻ qua CV AI FPT</p>
+        <p className="text-zinc-500 text-xs mb-6 text-center">CV được chia sẻ qua CV AI</p>
 
         {/* Thông tin cá nhân */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-4">
@@ -114,7 +114,7 @@ export default async function SharedCvPage({
 
         <div className="mt-10 text-center">
           <Link href="/signup" className="inline-block px-6 py-3 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-semibold transition-all">
-            Tạo CV miễn phí với CV AI FPT →
+            Tạo CV miễn phí với CV AI →
           </Link>
         </div>
       </main>

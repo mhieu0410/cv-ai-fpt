@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { isAdmin } from '@/lib/admin-auth'
 import { createServerSupabase } from '@/lib/supabase-server'
+import { LayoutDashboard, ShoppingCart, Users, MessageSquare, LogOut } from 'lucide-react'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createServerSupabase()
@@ -13,48 +14,69 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const email = user.email ?? ''
 
   return (
-    <div className="min-h-screen bg-zinc-100">
-      {/* Admin navbar */}
-      <nav className="bg-zinc-900 border-b border-zinc-700 px-4 py-3">
-        <div className="max-w-5xl mx-auto flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-1">
-            <span className="text-zinc-500 text-xs font-semibold uppercase tracking-widest mr-3">
-              Admin
-            </span>
-            <NavLink href="/admin">Tổng quan</NavLink>
-            <NavLink href="/admin/orders">Đơn hàng</NavLink>
-            <NavLink href="/admin/users">Người dùng</NavLink>
-            <NavLink href="/admin/feedbacks">Feedback</NavLink>
+    <div className="flex h-screen bg-zinc-50 overflow-hidden font-sans">
+      {/* Admin Sidebar */}
+      <aside className="w-64 bg-zinc-950 flex flex-col border-r border-zinc-900 shadow-2xl relative z-20">
+        <div className="p-6">
+          <div className="text-[var(--fpt-orange)] text-xs font-black uppercase tracking-[0.2em] mb-1">
+            FPT CV Builder
           </div>
+          <div className="text-white text-xl font-black tracking-tight">
+            Admin Panel
+          </div>
+        </div>
 
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-mono text-zinc-400 bg-zinc-800 px-2.5 py-1 rounded-full">
-              ADMIN: {email}
+        <div className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+          <NavLink href="/admin" icon={<LayoutDashboard className="w-4 h-4" />}>
+            Tổng quan
+          </NavLink>
+          <NavLink href="/admin/orders" icon={<ShoppingCart className="w-4 h-4" />}>
+            Đơn hàng
+          </NavLink>
+          <NavLink href="/admin/users" icon={<Users className="w-4 h-4" />}>
+            Người dùng
+          </NavLink>
+          <NavLink href="/admin/feedbacks" icon={<MessageSquare className="w-4 h-4" />}>
+            Feedback
+          </NavLink>
+        </div>
+
+        <div className="p-4 border-t border-white/10 bg-black/20">
+          <div className="flex flex-col gap-3">
+            <span className="text-[10px] font-mono text-zinc-400 bg-white/5 px-2.5 py-1.5 rounded-lg border border-white/5 truncate">
+              {email}
             </span>
             <a
               href="/dashboard"
-              className="text-zinc-400 hover:text-white text-xs transition-colors"
+              className="flex items-center gap-2 text-zinc-400 hover:text-white text-sm font-bold transition-colors w-full px-2"
             >
-              Thoát admin →
+              <LogOut className="w-4 h-4" />
+              Thoát admin
             </a>
           </div>
         </div>
-      </nav>
+      </aside>
 
       {/* Page content */}
-      <main className="max-w-5xl mx-auto px-4 py-8">
-        {children}
+      <main className="flex-1 overflow-auto bg-zinc-50 relative">
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 mix-blend-overlay pointer-events-none"></div>
+        <div className="max-w-6xl mx-auto p-8 relative z-10">
+          {children}
+        </div>
       </main>
     </div>
   )
 }
 
-function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
+function NavLink({ href, icon, children }: { href: string; icon: React.ReactNode; children: React.ReactNode }) {
   return (
     <a
       href={href}
-      className="text-zinc-400 hover:text-white text-sm px-3 py-1.5 rounded-lg hover:bg-zinc-800 transition-colors"
+      className="flex items-center gap-3 text-zinc-400 hover:text-white font-bold text-sm px-4 py-3 rounded-xl hover:bg-white/10 transition-all group"
     >
+      <span className="text-zinc-500 group-hover:text-[var(--fpt-orange)] transition-colors">
+        {icon}
+      </span>
       {children}
     </a>
   )

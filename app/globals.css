@@ -13,6 +13,11 @@
   --color-fpt-orange: var(--fpt-orange);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  
+  /* Soft shadows for Bento Grid */
+  --shadow-soft-md: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+  --shadow-soft-xl: 0 20px 40px -15px rgba(0, 0, 0, 0.05);
+  --shadow-soft-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
 }
 
 body {
@@ -70,10 +75,26 @@ body {
   color: #fff;
 }
 
-/* ── Smooth scroll ──────────────────────────────────────── */
+/* ── Lenis Smooth Scroll Boilerplate ─────────────────────── */
 
-html {
-  scroll-behavior: smooth;
+html.lenis, html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
 }
 
 /* ── Performance: reduce motion for accessibility ────────── */

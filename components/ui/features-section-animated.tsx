@@ -1,7 +1,5 @@
 "use client";
-import Link from "next/link";
-import { motion } from "framer-motion";
-import { MagneticButton } from "./magnetic-button";
+import { motion } from 'framer-motion'
 
 // ── Animated Features Bento Grid ────────────────────────────────────
 export const FeaturesSectionAnimated = () => {

@@ -3,7 +3,6 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import gsap from "gsap";
-import { useGSAP } from "@gsap/react";
 
 interface LogoProps {
   className?: string;
@@ -11,6 +10,31 @@ interface LogoProps {
   collapsed?: boolean;
   theme?: "light" | "dark";
 }
+
+const GlitchLetter = ({ char }: { char: string }) => {
+  const [isLetterHovered, setIsLetterHovered] = useState(false);
+  return (
+    <span
+      className="relative inline-block cursor-crosshair"
+      onMouseEnter={() => setIsLetterHovered(true)}
+      onMouseLeave={() => setIsLetterHovered(false)}
+    >
+      {/* Invisible spacer keeps layout stable */}
+      <span className="invisible">{char}</span>
+
+      {/* Overlay layer */}
+      <span className="absolute inset-0 flex justify-center items-center">
+        {!isLetterHovered ? (
+          <span className="text-zinc-950">{char}</span>
+        ) : (
+          <UltimateTraeGlitch colorClass="text-zinc-950">
+            {char}
+          </UltimateTraeGlitch>
+        )}
+      </span>
+    </span>
+  );
+};
 
 export const Logo = ({ className = "", isFooter = false, collapsed = false, theme = "light" }: LogoProps) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -42,40 +66,9 @@ export const Logo = ({ className = "", isFooter = false, collapsed = false, them
 
   const mainColor = theme === "dark" ? "text-white" : "text-black";
   const aiColor = isFooter ? "text-black" : "text-[var(--fpt-orange)]";
-  const strokeStyle = {};
-  
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-  };
 
   // FOOTER LOGO: Per-Letter Ultimate Trae Glitch Effect (No Masks, No Borders)
   if (isFooter) {
-    const GlitchLetter = ({ char }: { char: string }) => {
-      const [isLetterHovered, setIsLetterHovered] = useState(false);
-      return (
-        <span 
-          className="relative inline-flex justify-center items-center cursor-crosshair"
-          onMouseEnter={() => setIsLetterHovered(true)}
-          onMouseLeave={() => setIsLetterHovered(false)}
-        >
-          {/* Luôn giữ một chữ vô hình để giữ layout không bị nhảy khi Glitch */}
-          <span className="opacity-0">{char}</span>
-          
-          <div className="absolute inset-0 flex justify-center items-center">
-            {!isLetterHovered ? (
-              <span className="text-zinc-950">{char}</span>
-            ) : (
-              <UltimateTraeGlitch colorClass="text-zinc-950">
-                {char}
-              </UltimateTraeGlitch>
-            )}
-          </div>
-        </span>
-      );
-    };
 
     return (
       <div
@@ -84,7 +77,7 @@ export const Logo = ({ className = "", isFooter = false, collapsed = false, them
         <motion.div
           whileHover={{ scale: 1.02 }}
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          className="relative flex justify-center items-center w-full h-full text-[34vw] leading-[0.8]"
+          className="relative flex justify-center items-center w-full h-full text-[37vw] leading-[0.8]"
         >
           <div className="flex items-center justify-center w-full">
             <GlitchLetter char="C" />
@@ -148,7 +141,7 @@ const GeometrySymbol = () => (
 );
 
 // ── GLITCH EFFECT CŨ (Cho Header) ──
-const GlitchEffect = ({ text, strokeStyle, isFooter }: { text: string, strokeStyle?: any, isFooter?: boolean }) => {
+const GlitchEffect = ({ text, strokeStyle, isFooter }: { text: string, strokeStyle?: React.CSSProperties, isFooter?: boolean }) => {
   const blendMode1 = isFooter ? "mix-blend-screen text-[#FF0055]" : "mix-blend-multiply text-[#FF0055]";
   const blendMode2 = isFooter ? "mix-blend-screen text-[#00FFFF]" : "mix-blend-multiply text-[#00FFFF]";
   const baseColor = "text-[var(--fpt-orange)]";
@@ -204,12 +197,11 @@ const GlitchEffect = ({ text, strokeStyle, isFooter }: { text: string, strokeSty
 
 // ── ULTIMATE TRAE GLITCH (Cho Footer) ──
 // Tạo ra hàng tá lát cắt cực mỏng và giật ngẫu nhiên liên tục để tái hiện độ "ảo diệu" của TRAE
-const UltimateTraeGlitch = ({ children, colorClass = "" }: { children: React.ReactNode, colorClass?: string }) => {
-  // Tạo 20 lát cắt (slices) thay vì 12 để vỡ vụn hơn
-  const slices = Array.from({ length: 20 }).map((_, i) => {
+const generateGlitchSlices = () => {
+  return Array.from({ length: 20 }).map((_, i) => {
     const top = (i * 100) / 20;
     const bottom = 100 - ((i + 1) * 100) / 20;
-    // Tăng biên độ giật ngang lên gấp 3 lần (Violent shake)
+    // Chaotic random values
     const xValues = [
       0, 
       (Math.random() - 0.5) * 150, 
@@ -217,8 +209,14 @@ const UltimateTraeGlitch = ({ children, colorClass = "" }: { children: React.Rea
       (Math.random() - 0.5) * 90, 
       0
     ];
-    return { top, bottom, xValues };
+    const duration = 0.05 + Math.random() * 0.1;
+    const delay = Math.random() * 0.05;
+    return { top, bottom, xValues, duration, delay };
   });
+};
+
+const UltimateTraeGlitch = ({ children, colorClass = "" }: { children: React.ReactNode, colorClass?: string }) => {
+  const [slices] = useState(generateGlitchSlices);
 
   return (
     <span className="absolute inset-0 flex justify-center items-center w-full">
@@ -240,9 +238,9 @@ const UltimateTraeGlitch = ({ children, colorClass = "" }: { children: React.Rea
           animate={{ x: slice.xValues }}
           transition={{ 
             repeat: Infinity, 
-            duration: 0.05 + Math.random() * 0.1, // Rất nhanh
+            duration: slice.duration,
             ease: "linear",
-            delay: Math.random() * 0.05 
+            delay: slice.delay 
           }}
         >
           {children}

@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase-admin'
+import { Users, FileText, Package, Wallet } from 'lucide-react'
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleString('vi-VN', {
@@ -19,7 +20,7 @@ const STATUS_LABEL: Record<string, { label: string; cls: string }> = {
 }
 
 interface StatCardProps {
-  icon: string
+  icon: React.ReactNode
   value: string
   label: string
   sub?: string
@@ -27,11 +28,17 @@ interface StatCardProps {
 
 function StatCard({ icon, value, label, sub }: StatCardProps) {
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-zinc-200 p-6">
-      <div className="text-2xl mb-3">{icon}</div>
-      <p className="text-4xl font-bold text-zinc-900">{value}</p>
-      <p className="text-sm text-zinc-500 mt-1">{label}</p>
-      {sub && <p className="text-xs text-zinc-400 mt-0.5">{sub}</p>}
+    <div className="bg-white rounded-3xl shadow-soft-xl border border-zinc-200/60 p-8 flex flex-col justify-between group hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] hover:-translate-y-1 transition-all duration-300">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-12 h-12 rounded-2xl bg-zinc-50 border border-zinc-100 flex items-center justify-center text-zinc-900 group-hover:bg-[var(--fpt-orange)] group-hover:text-white transition-colors duration-300">
+          {icon}
+        </div>
+        <p className="text-sm font-bold text-zinc-500 uppercase tracking-widest">{label}</p>
+      </div>
+      <div>
+        <p className="text-5xl font-black text-zinc-900 tracking-tighter">{value}</p>
+        {sub && <p className="text-xs font-semibold text-zinc-400 mt-2">{sub}</p>}
+      </div>
     </div>
   )
 }
@@ -63,7 +70,7 @@ export default async function AdminPage() {
       .limit(5),
   ])
 
-  // Quan sát lỗi truy vấn (không chặn render — dashboard vẫn hiển thị 0 nếu lỗi)
+  // Quan sát lỗi truy vấn
   const queryErrors = [e1, e2, e3, e4, e5, e6, e7].filter(Boolean)
   if (queryErrors.length > 0) {
     console.error('[admin/dashboard] query errors:', queryErrors.map((e) => e?.message))
@@ -73,58 +80,61 @@ export default async function AdminPage() {
   const paidCount = paidOrders?.length ?? 0
 
   return (
-    <div className="space-y-8">
-      <h1 className="text-xl font-bold text-zinc-800">Tổng quan</h1>
+    <div className="space-y-8 max-w-7xl mx-auto">
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-black text-zinc-900 tracking-tight">Tổng Quan Hệ Thống</h1>
+      </div>
 
-      {/* Stat cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Stat cards - Bento Grid style */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         <StatCard
-          icon="👥"
+          icon={<Users className="w-6 h-6" />}
           value={(userCount ?? 0).toLocaleString('vi-VN')}
           label="Người dùng"
         />
         <StatCard
-          icon="📄"
+          icon={<FileText className="w-6 h-6" />}
           value={(cvCount ?? 0).toLocaleString('vi-VN')}
           label="CV đã tạo"
         />
         <StatCard
-          icon="📦"
+          icon={<Package className="w-6 h-6" />}
           value={(orderCount ?? 0).toLocaleString('vi-VN')}
           label="Tổng đơn hàng"
           sub={`${awaitingCount ?? 0} chờ duyệt`}
         />
         <StatCard
-          icon="💰"
+          icon={<Wallet className="w-6 h-6" />}
           value={fmtVnd(revenue)}
           label="Doanh thu"
           sub={`${paidCount} đơn đã thanh toán`}
         />
       </div>
 
-      {/* Tables */}
+      {/* Tables - Bento Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent orders */}
-        <div className="bg-white rounded-2xl shadow-sm border border-zinc-200 overflow-hidden">
-          <div className="px-5 py-4 border-b border-zinc-100">
-            <h2 className="text-sm font-semibold text-zinc-700">5 đơn hàng gần nhất</h2>
+        <div className="bg-white rounded-3xl shadow-soft-xl border border-zinc-200/60 overflow-hidden flex flex-col h-[400px]">
+          <div className="px-6 py-5 border-b border-zinc-100 flex items-center justify-between shrink-0">
+            <h2 className="text-base font-bold text-zinc-900 tracking-wide uppercase">5 đơn hàng gần nhất</h2>
+            <a href="/admin/orders" className="text-xs font-bold text-[var(--fpt-orange)] hover:underline">Xem tất cả</a>
           </div>
-          <div className="divide-y divide-zinc-100">
+          <div className="divide-y divide-zinc-50 overflow-y-auto flex-1">
             {!recentOrders?.length && (
-              <p className="text-zinc-400 text-sm px-5 py-4">Chưa có đơn nào.</p>
+              <div className="h-full flex items-center justify-center text-zinc-400 text-sm font-medium">Chưa có đơn nào.</div>
             )}
             {recentOrders?.map((o) => {
               const profile = o.profiles as unknown as { email: string } | null
               const st = STATUS_LABEL[o.status] ?? { label: o.status, cls: 'text-zinc-600 bg-zinc-100' }
               return (
-                <div key={o.order_code} className="px-5 py-3 flex items-center justify-between gap-3">
+                <div key={o.order_code} className="px-6 py-4 flex items-center justify-between gap-4 hover:bg-zinc-50/50 transition-colors">
                   <div className="min-w-0">
-                    <p className="text-sm font-mono font-medium text-zinc-800 truncate">{o.order_code}</p>
-                    <p className="text-xs text-zinc-400 truncate">{profile?.email ?? '—'} · {fmtDate(o.created_at)}</p>
+                    <p className="text-sm font-mono font-bold text-zinc-900 truncate">{o.order_code}</p>
+                    <p className="text-xs font-medium text-zinc-500 truncate mt-0.5">{profile?.email ?? '—'} · {fmtDate(o.created_at)}</p>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-sm font-medium text-zinc-700">{fmtVnd(o.amount)}</span>
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${st.cls}`}>{st.label}</span>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span className="text-sm font-bold text-zinc-900">{fmtVnd(o.amount)}</span>
+                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md ${st.cls}`}>{st.label}</span>
                   </div>
                 </div>
               )
@@ -133,23 +143,29 @@ export default async function AdminPage() {
         </div>
 
         {/* Recent users */}
-        <div className="bg-white rounded-2xl shadow-sm border border-zinc-200 overflow-hidden">
-          <div className="px-5 py-4 border-b border-zinc-100">
-            <h2 className="text-sm font-semibold text-zinc-700">5 user mới nhất</h2>
+        <div className="bg-white rounded-3xl shadow-soft-xl border border-zinc-200/60 overflow-hidden flex flex-col h-[400px]">
+          <div className="px-6 py-5 border-b border-zinc-100 flex items-center justify-between shrink-0">
+            <h2 className="text-base font-bold text-zinc-900 tracking-wide uppercase">5 user mới nhất</h2>
+            <a href="/admin/users" className="text-xs font-bold text-[var(--fpt-orange)] hover:underline">Xem tất cả</a>
           </div>
-          <div className="divide-y divide-zinc-100">
+          <div className="divide-y divide-zinc-50 overflow-y-auto flex-1">
             {!recentUsers?.length && (
-              <p className="text-zinc-400 text-sm px-5 py-4">Chưa có user nào.</p>
+              <div className="h-full flex items-center justify-center text-zinc-400 text-sm font-medium">Chưa có user nào.</div>
             )}
             {recentUsers?.map((u, i) => (
-              <div key={i} className="px-5 py-3 flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-sm text-zinc-800 truncate">{u.email}</p>
-                  <p className="text-xs text-zinc-400">{fmtDate(u.created_at)}</p>
+              <div key={i} className="px-6 py-4 flex items-center justify-between gap-4 hover:bg-zinc-50/50 transition-colors">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-500 font-bold shrink-0">
+                    {u.email.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-zinc-900 truncate">{u.email}</p>
+                    <p className="text-xs font-medium text-zinc-500 mt-0.5">{fmtDate(u.created_at)}</p>
+                  </div>
                 </div>
-                <span className={`text-xs font-medium px-2 py-0.5 rounded-full shrink-0 ${
+                <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md shrink-0 ${
                   u.plan === 'pro'
-                    ? 'text-blue-700 bg-blue-100'
+                    ? 'text-[var(--fpt-orange)] bg-orange-50'
                     : 'text-zinc-500 bg-zinc-100'
                 }`}>
                   {u.plan === 'pro' ? 'Pro' : 'Free'}
