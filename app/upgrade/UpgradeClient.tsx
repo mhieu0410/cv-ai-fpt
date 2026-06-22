@@ -195,7 +195,7 @@ export default function UpgradeClient({ isPro = false }: { isPro?: boolean }) {
                 <span className="text-2xl">⚡</span> Kích hoạt bao lâu?
               </h4>
               <p className="text-zinc-600 font-semibold leading-relaxed">
-                Sau khi thanh toán qua mã VietQR, hệ thống sẽ tự động đối soát và kích hoạt gói Pro cho bạn <strong>ngay lập tức trong vòng 3 giây</strong>.
+                Sau khi chuyển khoản qua mã VietQR, bạn nhập <strong>mã giao dịch ngân hàng</strong>. Admin sẽ đối soát và kích hoạt gói Pro cho bạn, <strong>thường trong vòng vài giờ làm việc</strong>.
               </p>
             </div>
             

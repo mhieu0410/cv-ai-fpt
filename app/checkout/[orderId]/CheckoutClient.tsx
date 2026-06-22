@@ -14,6 +14,7 @@ export default function CheckoutClient() {
   const [status, setStatus] = useState<'loading' | 'waiting' | 'success'>('loading')
   const [amount] = useState(CONFIG.proPrice)
 
+  const [txnId, setTxnId] = useState('')
   const [verifying, setVerifying] = useState(false)
   const [error, setError] = useState('')
 
@@ -32,26 +33,32 @@ export default function CheckoutClient() {
 
   async function handleVerify() {
     if (verifying) return
+
+    const trimmed = txnId.trim()
+    if (trimmed.length < 4) {
+      setError('Vui lòng nhập mã giao dịch ngân hàng (ít nhất 4 ký tự).')
+      return
+    }
+
     setVerifying(true)
     setError('')
 
     try {
-      // Simulate banking delay
-      await new Promise(res => setTimeout(res, 2000))
-
-      const res = await fetch(`/api/orders/${orderId}/verify`, {
-        method: 'POST'
+      const res = await fetch(`/api/orders/${orderId}/confirm`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bank_txn_id: trimmed }),
       })
       const data = await res.json()
 
       if (!res.ok) {
-        throw new Error(data.error || 'Lỗi xác thực thanh toán')
+        throw new Error(data.error || 'Lỗi xác nhận giao dịch')
       }
 
       setStatus('success')
       setTimeout(() => {
-        router.push('/dashboard?success=pro')
-      }, 2500)
+        router.push('/orders/me')
+      }, 2800)
     } catch (err: any) {
       setError(err.message || 'Không thể xác nhận giao dịch. Vui lòng thử lại.')
       setVerifying(false)
@@ -94,7 +101,7 @@ export default function CheckoutClient() {
               
               <div className="w-full text-center mb-8">
                 <h1 className="text-white text-3xl font-black tracking-tight mb-2">Thanh Toán Pro</h1>
-                <p className="text-zinc-400 text-sm font-medium">Quét mã VietQR bằng ứng dụng ngân hàng</p>
+                <p className="text-zinc-400 text-sm font-medium">Quét mã VietQR, chuyển khoản rồi nhập mã giao dịch để admin đối soát</p>
               </div>
 
               {/* QR Code Container */}
@@ -124,18 +131,36 @@ export default function CheckoutClient() {
                   Giao dịch mã hoá an toàn
                 </div>
 
+                <div className="text-left mt-2">
+                  <label htmlFor="bankTxnId" className="block text-zinc-300 text-xs font-bold uppercase tracking-widest mb-2">
+                    Mã giao dịch ngân hàng
+                  </label>
+                  <input
+                    id="bankTxnId"
+                    type="text"
+                    value={txnId}
+                    onChange={e => { setTxnId(e.target.value); setError('') }}
+                    placeholder="VD: FT2406221234567"
+                    disabled={verifying}
+                    className="w-full px-4 py-3 rounded-2xl bg-white/10 border-2 border-white/20 text-white placeholder:text-zinc-500 font-mono font-bold tracking-wide focus:outline-none focus:border-[var(--fpt-orange)] focus:ring-4 focus:ring-[var(--fpt-orange)]/20 transition-all disabled:opacity-50"
+                  />
+                  <p className="text-zinc-500 text-[11px] font-medium mt-2 leading-relaxed">
+                    Nhập mã giao dịch (reference) hiển thị trong app ngân hàng sau khi chuyển khoản. Admin sẽ đối soát và kích hoạt Pro cho bạn.
+                  </p>
+                </div>
+
                 {error && (
                   <div className="mt-4 p-3 border-2 border-red-500 bg-red-500/20 text-red-200 text-sm font-bold rounded-xl">
                     {error}
                   </div>
                 )}
 
-                <button 
+                <button
                   onClick={handleVerify}
                   disabled={verifying}
                   className="w-full mt-6 py-4 px-6 bg-[var(--fpt-orange)] text-white font-black uppercase tracking-widest rounded-2xl shadow-[0_0_20px_-5px_#f26f21] hover:shadow-[0_0_40px_-5px_#f26f21] transition-all disabled:opacity-50 disabled:shadow-none hover:-translate-y-1 active:scale-95 border-4 border-transparent"
                 >
-                  {verifying ? 'ĐANG KIỂM TRA GD...' : 'TÔI ĐÃ CHUYỂN KHOẢN'}
+                  {verifying ? 'ĐANG GỬI XÁC NHẬN...' : 'TÔI ĐÃ CHUYỂN KHOẢN'}
                 </button>
               </div>
             </div>
@@ -148,16 +173,16 @@ export default function CheckoutClient() {
             transition={{ duration: 0.5, type: 'spring', bounce: 0.5 }}
             className="flex flex-col items-center text-center relative z-10"
           >
-            <motion.div 
+            <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.2, type: 'spring', bounce: 0.6 }}
-              className="w-32 h-32 bg-green-500 rounded-full flex items-center justify-center shadow-[0_0_60px_rgba(34,197,94,0.6)] mb-8"
+              className="w-32 h-32 bg-blue-500 rounded-full flex items-center justify-center shadow-[0_0_60px_rgba(59,130,246,0.6)] mb-8"
             >
               <CheckCircle2 className="w-16 h-16 text-white" />
             </motion.div>
-            <h2 className="text-white text-5xl font-black tracking-tight mb-4">Thành Công!</h2>
-            <p className="text-zinc-400 text-lg font-medium max-w-sm">Tài khoản của bạn đã được kích hoạt Pro. Đang chuyển hướng...</p>
+            <h2 className="text-white text-5xl font-black tracking-tight mb-4">Đã Gửi!</h2>
+            <p className="text-zinc-400 text-lg font-medium max-w-sm">Đã nhận thông tin chuyển khoản. Admin sẽ đối soát giao dịch và kích hoạt Pro cho bạn trong thời gian sớm nhất. Đang chuyển hướng...</p>
           </motion.div>
         )}
       </AnimatePresence>

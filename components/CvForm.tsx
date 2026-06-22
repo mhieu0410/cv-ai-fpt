@@ -191,10 +191,10 @@ function MagicTextarea({
     setIsGenerating(true)
     setShowAi(true)
     setAiText('')
-    
-    // Fake streaming delay for demo purposes
+
+    // TODO: Thay bằng API thật khi triển khai monetization (gọi endpoint AI của bạn)
     const fakeResponse = `Đã tham gia thiết kế và tối ưu hoá dự án, ứng dụng các best practices để cải thiện 30% hiệu năng. ${value.slice(0, 30)}...`
-    
+
     // Simulate typing
     for (let i = 0; i <= fakeResponse.length; i++) {
       await new Promise(r => setTimeout(r, 20))
@@ -219,9 +219,9 @@ function MagicTextarea({
           className={fieldCls('', hasError && !showAi, isHighlighted, 'resize-none leading-relaxed relative z-10 w-full')}
           disabled={isGenerating}
         />
-        
+
         {!showAi && (
-          <button 
+          <button
             type="button"
             onClick={handleMagic}
             className={`absolute bottom-4 right-4 ${isPro ? 'bg-zinc-900 text-white hover:bg-[var(--fpt-orange)]' : 'bg-yellow-400 text-black border-2 border-black'} px-3 py-2 rounded-xl shadow-lg opacity-0 group-hover/magic:opacity-100 transition-all hover:scale-110 z-20 flex items-center gap-1.5 font-bold text-[11px] uppercase tracking-widest`}
@@ -234,7 +234,7 @@ function MagicTextarea({
 
       {showAi && !isGenerating && (
         <div className="flex items-center gap-2 mt-3 justify-end">
-          <button 
+          <button
             type="button"
             onClick={() => {
               onChange(aiText)
@@ -244,7 +244,7 @@ function MagicTextarea({
           >
             <span className="text-green-400">✓</span> Áp dụng
           </button>
-          <button 
+          <button
             type="button"
             onClick={() => {
               setShowAi(false)
@@ -462,7 +462,7 @@ export default function CvForm({ mode, initialData, cvId }: Props) {
   // Live Preview Data
   const currentTemplateId = initialData?.template || 'classic'
   const { Preview } = getTemplate(currentTemplateId)
-  
+
   const contentPreview: CvContent = {
     personal,
     education,
@@ -473,7 +473,7 @@ export default function CvForm({ mode, initialData, cvId }: Props) {
 
   return (
     <div className="h-screen w-full flex flex-col bg-zinc-50 overflow-hidden relative">
-      
+
       {/* ── TOP BAR (Neo-Brutalism) ── */}
       <header className="h-20 w-full bg-white border-b-4 border-black flex items-center justify-between px-4 md:px-6 z-50 shrink-0 shadow-[0_4px_0_0_#000]">
         <div className="flex items-center gap-4 w-1/3">
@@ -482,15 +482,19 @@ export default function CvForm({ mode, initialData, cvId }: Props) {
             <span className="md:hidden">←</span>
           </button>
         </div>
-        
-        <div className="flex-1 flex justify-center items-center w-1/3">
+
+        <div className="flex-1 flex flex-col justify-center items-center w-1/3">
            <input
+             id="field-title"
              value={title}
              onChange={e => setTitle(e.target.value)}
              onBlur={() => touch('title')}
              placeholder="Tên file CV..."
-             className="bg-transparent border-none text-center font-black text-lg md:text-xl placeholder-zinc-300 focus:outline-none focus:ring-0 w-full max-w-[400px] hover:bg-zinc-100 rounded-xl px-4 py-2 transition-colors truncate"
+             className={`bg-zinc-100 border-2 border-black rounded-xl text-center font-black text-base md:text-lg placeholder-zinc-400 focus:outline-none focus:ring-0 w-full max-w-[400px] hover:bg-zinc-200 focus:bg-white px-4 py-2 transition-colors truncate shadow-[2px_2px_0_0_#000] ${touched.title && errors.title ? 'border-red-500 bg-red-50' : ''} ${hi === 'field-title' ? 'ring-4 ring-red-500/20 border-red-500' : ''}`}
            />
+           {touched.title && errors.title && (
+             <span className="text-red-500 text-[11px] font-medium mt-0.5 hidden md:block">{errors.title}</span>
+           )}
         </div>
 
         <div className="flex items-center justify-end gap-3 md:gap-4 w-1/3">
@@ -503,7 +507,7 @@ export default function CvForm({ mode, initialData, cvId }: Props) {
            ) : (
               <span className="text-green-600 font-black text-[13px] uppercase tracking-widest hidden md:block opacity-0">✓ Đã lưu</span>
            )}
-           
+
            <button onClick={handleSave} disabled={saving} className="bg-[var(--fpt-orange)] text-white font-black uppercase tracking-widest text-[12px] md:text-[13px] px-5 md:px-6 py-2.5 border-2 border-black rounded-xl shadow-[4px_4px_0_0_#000] hover:-translate-y-1 hover:shadow-[6px_6px_0_0_#000] active:translate-y-0 active:shadow-none transition-all disabled:opacity-50 whitespace-nowrap">
              Lưu CV
            </button>
@@ -518,7 +522,7 @@ export default function CvForm({ mode, initialData, cvId }: Props) {
 
       {/* ── MAIN WORKSPACE ── */}
       <div className="flex-1 w-full flex overflow-hidden">
-        
+
         {/* ── BÊN TRÁI: Form Nhập Liệu (Focus Mode) ── */}
         <div className="w-full lg:w-[40%] flex flex-col h-full bg-[#f8f9fa] border-r-4 border-black z-10 relative">
 
@@ -540,8 +544,6 @@ export default function CvForm({ mode, initialData, cvId }: Props) {
                 />
               </div>
             </div>
-
-            {touched.title && <ErrMsg msg={errors.title} />}
 
             {/* ── Thông tin cá nhân ── */}
             <section className="mb-12">
@@ -732,7 +734,7 @@ export default function CvForm({ mode, initialData, cvId }: Props) {
                 ))}
               </div>
             </section>
-            
+
             <div className="pb-10"></div>
           </div>
         </div>
