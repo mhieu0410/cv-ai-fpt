@@ -13,7 +13,7 @@ function isProtected(pathname: string): boolean {
   )
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   // response mặc định — sẽ được tái tạo nếu Supabase cần ghi lại cookie (refresh token)
   let response = NextResponse.next({ request })
 

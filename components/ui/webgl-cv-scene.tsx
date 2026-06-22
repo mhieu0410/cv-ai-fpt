@@ -462,16 +462,12 @@ function Scene({ scrollYProgress, currentPhase }: { scrollYProgress: MotionValue
 }
 
 function PostProcessing() {
-  // @ts-expect-error - React 19 type mismatch in postprocessing
   return (
+    // @ts-expect-error - React 19 type mismatch in EffectComposer
     <EffectComposer disableNormalPass multisampling={0}>
-      {/* @ts-expect-error - React 19 type mismatch with Bloom */}
       <Bloom luminanceThreshold={1.2} luminanceSmoothing={0.9} intensity={1.5} mipmapBlur={true} />
-      {/* @ts-expect-error - React 19 type mismatch with ChromaticAberration */}
       <ChromaticAberration offset={new THREE.Vector2(0.0008, 0.0008)} blendFunction={BlendFunction.NORMAL} radialModulation={false} modulationOffset={0} />
-      {/* @ts-expect-error - React 19 type mismatch with Vignette */}
       <Vignette eskil={false} offset={0.1} darkness={0.9} />
-      {/* @ts-expect-error - React 19 type mismatch with Noise */}
       <Noise opacity={0.025} />
     </EffectComposer>
   );
