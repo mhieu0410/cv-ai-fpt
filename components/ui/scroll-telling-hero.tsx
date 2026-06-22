@@ -2,10 +2,17 @@
 import React, { useRef, useState } from "react";
 import {
   motion, AnimatePresence,
-  useScroll, useMotionValueEvent, useTransform,
+  useScroll, useMotionValueEvent,
 } from "framer-motion";
 import Link from "next/link";
 import { WebGLCVScene } from "./webgl-cv-scene";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useGSAP } from "@gsap/react";
+
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger, useGSAP);
+}
 
 // ─────────────────────────────────────────────────────────────────────
 // PHASE CONTENT — Text lives on the LEFT, 3D scene reacts on the RIGHT
@@ -57,6 +64,8 @@ const TOTAL_PHASES = PHASES.length;
 
 export const ScrollTellingHero = () => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const stickyRef = useRef<HTMLDivElement>(null);
+  const textColumnRef = useRef<HTMLDivElement>(null);
   const [phaseIdx, setPhaseIdx] = useState(0);
 
   const { scrollYProgress } = useScroll({
@@ -69,14 +78,32 @@ export const ScrollTellingHero = () => {
     setPhaseIdx(idx);
   });
 
-  // White fade overlay — makes hero dissolve seamlessly into white content
-  const whiteFade = useTransform(scrollYProgress, [0.80, 0.98], [0, 1]);
+  // GSAP Exit Parallax
+  useGSAP(() => {
+    if (!containerRef.current || !textColumnRef.current || !stickyRef.current) return;
+
+    // We want the text to blur and scale down at the very end of the 800vh scroll
+    // when the next section is about to overlay.
+    ScrollTrigger.create({
+      trigger: containerRef.current,
+      start: "bottom 150%", // Start animating when bottom of container is 150% down the viewport
+      end: "bottom top", 
+      scrub: true,
+      animation: gsap.to(textColumnRef.current, {
+        opacity: 0,
+        scale: 0.85,
+        y: -100,
+        filter: "blur(12px)",
+        ease: "none"
+      })
+    });
+  }, { scope: containerRef });
 
   const phase = PHASES[phaseIdx];
 
   return (
     <div ref={containerRef} className="relative h-[800vh] w-full">
-      <div className="sticky top-0 h-[100dvh] w-full overflow-hidden">
+      <div ref={stickyRef} className="sticky top-0 h-[100dvh] w-full overflow-hidden">
 
         {/* ── Background: Deep Navy ────────────────────────────────── */}
         <div
@@ -104,7 +131,7 @@ export const ScrollTellingHero = () => {
         <div className="absolute inset-0 flex">
 
           {/* ── LEFT COLUMN: Minimal editorial text ───────────────── */}
-          <div className="relative z-10 flex flex-col justify-center w-full md:w-[48%] pl-[7vw] pr-6 md:pr-12 pt-24 md:pt-0">
+          <div ref={textColumnRef} className="relative z-10 flex flex-col justify-center w-full md:w-[48%] pl-[7vw] pr-6 md:pr-12 pt-24 md:pt-0">
             <AnimatePresence mode="wait">
               <motion.div
                 key={phaseIdx}
@@ -246,3 +273,4 @@ export const ScrollTellingHero = () => {
     </div>
   );
 };
+

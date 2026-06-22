@@ -77,15 +77,18 @@ export const PricingSectionAnimated = () => {
             transition={{ duration: 0.7, ease: [0.32, 0.72, 0, 1], delay: 0.1 }}
             className="relative"
           >
-            {/* Badge outside card */}
-            <div className="absolute -top-5 -right-4 z-20 px-5 py-2 border-4 border-black bg-yellow-300 text-black font-black text-sm uppercase neo-shadow transform rotate-12">
-              Khuyên Dùng
-            </div>
             <ParallaxCard
               containerClassName="h-full"
               className="border-4 border-black rounded-none bg-[var(--fpt-orange)] neo-shadow h-full"
             >
-              <div className="p-10 flex flex-col h-full">
+              <div className="p-10 flex flex-col h-full relative">
+                {/* Badge — overlaps top-right border of card */}
+                <div
+                  className="absolute -top-px -right-px z-20 px-4 py-1.5 border-4 border-black bg-yellow-300 text-black font-black text-xs uppercase tracking-widest"
+                  style={{ boxShadow: "3px 3px 0 0 #000", transform: "rotate(3deg) translate(4px, -6px)" }}
+                >
+                  KHUYÊN DÙNG
+                </div>
                 <h3 className="text-3xl font-black text-black uppercase mb-2">Gói Pro AI</h3>
                 <div className="text-7xl font-black text-black tracking-tighter mb-1 neo-shadow-text">49K</div>
                 <div className="text-sm font-black text-black mb-8 border-b-4 border-black pb-5 uppercase tracking-widest">

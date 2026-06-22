@@ -64,8 +64,8 @@ export const FloatingNavbar = ({ isLoggedIn }: { isLoggedIn: boolean }) => {
     [0, 140, 240, Math.max(heroEndPx - 300, 241), heroEndPx + 60],
     [1,   1,   0,   0, 1]
   );
-  const navY      = useSpring(rawY,      { stiffness: 280, damping: 32, mass: 0.7 });
-  const navOpacity= useSpring(rawOpacity,{ stiffness: 280, damping: 32, mass: 0.7 });
+  const navY      = useSpring(rawY,      { stiffness: 400, damping: 40, mass: 0.5 });
+  const navOpacity= useSpring(rawOpacity,{ stiffness: 400, damping: 40, mass: 0.5 });
 
   // Update scrolled state (only switch to white mode when reappearing at the end of hero)
   useEffect(() => {

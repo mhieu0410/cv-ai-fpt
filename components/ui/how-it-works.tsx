@@ -1,61 +1,55 @@
 "use client";
-import { useRef } from "react";
-import { motion, useInView } from "framer-motion";
+import { useRef, useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
-// ── Mini UI Mockups for each step ───────────────────────────────────
+// ── Mini UI Mockups ───────────────────────────────────────────────────
 
 const InputMockup = () => (
-  <div className="bg-white border-2 border-zinc-200 p-5 font-mono text-xs select-none">
-    <div className="text-zinc-400 mb-3 uppercase tracking-widest text-[10px]">// thông_tin_thô.txt</div>
-    <div className="space-y-2">
+  <div className="bg-white p-6 font-mono text-xs select-none">
+    <div className="text-zinc-400 mb-3 uppercase tracking-widest text-[10px]">{"// thông_tin_thô.txt"}</div>
+    <div className="space-y-2 mb-4">
       {[
-        { text: "Làm project môn SWP391", w: "w-full", dimmed: true },
-        { text: "Biết code Java, HTML", w: "w-4/5", dimmed: true },
-        { text: "Tham gia CLB lập trình", w: "w-3/5", dimmed: true },
+        { text: "Làm project môn SWP391", w: "100%", dimmed: true },
+        { text: "Biết code Java, HTML", w: "80%", dimmed: true },
+        { text: "Tham gia CLB lập trình", w: "60%", dimmed: true },
       ].map(({ text, w, dimmed }, i) => (
-        <div key={i} className={`flex items-center gap-2 ${w}`}>
-          <span className={`text-[10px] ${dimmed ? "text-zinc-300" : "text-zinc-800"}`}>{text}</span>
+        <div key={i} style={{ width: w }} className="flex items-center gap-2">
+          <span className={`text-[11px] ${dimmed ? "text-zinc-300" : "text-zinc-800"}`}>{text}</span>
         </div>
       ))}
       <div className="flex items-center gap-2 mt-2">
         <span className="inline-block w-2 h-4 bg-[var(--fpt-orange)] animate-pulse" />
-        <span className="text-[10px] text-zinc-400">Dán CV của bạn vào đây...</span>
+        <span className="text-[11px] text-zinc-400">Dán CV của bạn vào đây...</span>
       </div>
     </div>
-    <div className="mt-4 flex items-center gap-2">
-      {/* Job Description badge */}
-      <div className="bg-zinc-950 text-white text-[9px] font-bold uppercase px-2 py-0.5">JD</div>
+    <div className="flex items-center gap-2 pt-3 border-t border-zinc-100">
+      <div className="bg-zinc-950 text-white text-[9px] font-bold uppercase px-2 py-0.5 flex-shrink-0">JD</div>
       <div className="text-[10px] text-zinc-500 truncate">Senior Frontend Developer — Tiki Corp...</div>
     </div>
   </div>
 );
 
 const AnalyzeMockup = () => (
-  <div className="bg-zinc-950 border-2 border-[var(--fpt-orange)] p-5 font-mono text-xs select-none">
-    <div className="flex items-center gap-2 mb-4">
-      <span className="w-2 h-2 bg-[var(--fpt-orange)] rounded-full" style={{ animation: "pulse 1s infinite" }} />
-      <span className="text-[var(--fpt-orange)] text-[10px] uppercase tracking-widest">AI đang phân tích...</span>
+  <div className="bg-zinc-950 p-6 font-mono text-xs select-none">
+    <div className="flex items-center gap-2 mb-5">
+      <span className="w-2 h-2 bg-[var(--fpt-orange)] rounded-full animate-pulse" />
+      <span className="text-[var(--fpt-orange)] text-[10px] uppercase tracking-widest font-bold">AI đang phân tích...</span>
     </div>
-
-    {/* ATS Score bar */}
-    <div className="mb-3">
-      <div className="flex justify-between mb-1">
+    <div className="mb-4">
+      <div className="flex justify-between mb-1.5">
         <span className="text-zinc-400 text-[10px]">ATS Match Score</span>
-        <span className="text-[var(--fpt-orange)] font-black text-[10px]">91.3%</span>
+        <span className="text-[var(--fpt-orange)] font-black text-[11px]">91.3%</span>
       </div>
-      <div className="h-2 bg-zinc-800 rounded-none overflow-hidden">
+      <div className="h-2 bg-zinc-800 overflow-hidden">
         <motion.div
           className="h-full bg-[var(--fpt-orange)]"
           initial={{ width: "0%" }}
-          whileInView={{ width: "91.3%" }}
-          viewport={{ once: true }}
-          transition={{ duration: 1.4, delay: 0.5, ease: [0.32, 0.72, 0, 1] }}
+          animate={{ width: "91.3%" }}
+          transition={{ duration: 1.4, delay: 0.2, ease: [0.32, 0.72, 0, 1] }}
         />
       </div>
     </div>
-
-    {/* Keywords found */}
-    <div className="space-y-1">
+    <div className="space-y-2">
       {[
         { kw: "React.js", hit: true },
         { kw: "TypeScript", hit: true },
@@ -68,7 +62,7 @@ const AnalyzeMockup = () => (
             {hit && <polyline points="3 6 5 8 9 4" stroke="white" strokeWidth="1.5" strokeLinecap="round" />}
             {!hit && <line x1="8" y1="4" x2="4" y2="8" stroke="white" strokeWidth="1.5" strokeLinecap="round" />}
           </svg>
-          <span className={`text-[10px] ${hit ? "text-white" : "text-zinc-600"}`}>{kw}</span>
+          <span className={`text-[11px] ${hit ? "text-white" : "text-zinc-500"}`}>{kw}</span>
           {!hit && <span className="text-[9px] text-yellow-500 ml-auto">AI thêm vào</span>}
         </div>
       ))}
@@ -77,12 +71,11 @@ const AnalyzeMockup = () => (
 );
 
 const DownloadMockup = () => (
-  <div className="bg-white border-2 border-black p-5 select-none">
-    {/* CV preview strip */}
+  <div className="bg-white p-6 select-none">
     <div className="border border-zinc-200 mb-4 overflow-hidden">
-      <div className="bg-[var(--fpt-orange)] px-3 py-2">
-        <div className="font-black text-white text-xs uppercase tracking-widest">Nguyễn Văn A</div>
-        <div className="text-white/80 text-[10px]">Frontend Developer</div>
+      <div className="bg-[var(--fpt-orange)] px-4 py-3">
+        <div className="font-black text-white text-sm uppercase tracking-widest">Nguyễn Văn A</div>
+        <div className="text-white/80 text-[11px]">Frontend Developer</div>
       </div>
       <div className="p-3 space-y-1.5">
         {[0.9, 0.7, 1, 0.6].map((w, i) => (
@@ -90,23 +83,20 @@ const DownloadMockup = () => (
         ))}
       </div>
     </div>
-
-    {/* ATS badge */}
-    <div className="flex items-center justify-between mb-3">
+    <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-1.5">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" aria-hidden="true">
           <polyline points="20 6 9 17 4 12" />
         </svg>
-        <span className="text-[11px] font-black text-emerald-600 uppercase">ATS: 91.3%</span>
+        <span className="text-[12px] font-black text-emerald-600 uppercase">ATS: 91.3%</span>
       </div>
-      <span className="text-[10px] text-zinc-400">PDF · A4 · ILovePDF</span>
+      <span className="text-[10px] text-zinc-400">PDF · A4</span>
     </div>
-
-    {/* Download button */}
     <motion.button
       whileHover={{ y: -2 }}
       whileTap={{ scale: 0.97 }}
-      className="w-full py-2.5 bg-[var(--fpt-orange)] border-2 border-black text-white text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 neo-shadow"
+      className="w-full py-3 bg-[var(--fpt-orange)] border-2 border-black text-white text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2"
+      style={{ boxShadow: "4px 4px 0 0 #000" }}
     >
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
         <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
@@ -116,130 +106,152 @@ const DownloadMockup = () => (
   </div>
 );
 
-// ── Steps data ───────────────────────────────────────────────────────
+// ── Steps ─────────────────────────────────────────────────────────────
 const STEPS = [
   {
     number: "01",
     title: "Nhập & Paste",
     description: "Paste thông tin CV thô + Job Description bạn muốn apply. Không cần format, không cần đẹp — AI hiểu tất cả.",
     color: "#87E8C6",
-    MockupComponent: InputMockup,
+    Mockup: InputMockup,
   },
   {
     number: "02",
     title: "AI Phân Tích",
     description: "AI quét qua từng dòng, map từ khóa với JD, tự động thêm vào những gì còn thiếu và viết lại theo chuẩn ATS.",
     color: "#FDE047",
-    MockupComponent: AnalyzeMockup,
+    Mockup: AnalyzeMockup,
   },
   {
     number: "03",
     title: "Tải CV Xịn",
     description: "Download PDF chuẩn A4 ngay lập tức. ATS Match Score 85%+ đảm bảo lọt qua vòng lọc tự động của nhà tuyển dụng.",
     color: "#F26F21",
-    MockupComponent: DownloadMockup,
+    Mockup: DownloadMockup,
   },
 ] as const;
 
-// ── Section ──────────────────────────────────────────────────────────
+// ── Main component ────────────────────────────────────────────────────
 export const HowItWorks = () => {
-  const lineRef = useRef<HTMLDivElement>(null);
-  const isLineInView = useInView(lineRef, { once: true, margin: "-100px" });
+  const [activeStep, setActiveStep] = useState(0);
+  const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  // Intersection Observer — works regardless of scroll engine (Lenis/native)
+  useEffect(() => {
+    const observers: IntersectionObserver[] = [];
+
+    stepRefs.current.forEach((el, index) => {
+      if (!el) return;
+      const obs = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) setActiveStep(index);
+        },
+        { threshold: 0.5, rootMargin: "0px 0px -20% 0px" }
+      );
+      obs.observe(el);
+      observers.push(obs);
+    });
+
+    return () => observers.forEach((obs) => obs.disconnect());
+  }, []);
+
+  const ActiveMockup = STEPS[activeStep].Mockup;
 
   return (
-    <section className="py-32 px-4 sm:px-6 bg-white border-b-4 border-black overflow-hidden">
-      <div className="max-w-7xl mx-auto">
+    <section className="bg-white border-b-4 border-black">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-24 lg:py-32">
 
         {/* Heading */}
-        <motion.div
-          initial={{ opacity: 0, y: 32 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7, ease: [0.32, 0.72, 0, 1] }}
-          className="mb-24"
-        >
+        <div className="mb-20">
           <span className="inline-block rounded-full px-3 py-1 text-[11px] uppercase tracking-[0.2em] font-black border-2 border-black bg-yellow-300 mb-6">
             Quy Trình
           </span>
-          <h2 className="text-6xl md:text-8xl font-black tracking-tighter text-black uppercase neo-shadow-text">
+          <h2
+            className="text-6xl md:text-8xl font-black tracking-tighter text-black uppercase"
+            style={{ textShadow: "4px 4px 0 #F26F21" }}
+          >
             3 Bước.<br />Xong.
           </h2>
           <p className="text-xl font-bold text-zinc-500 mt-6 max-w-[50ch]">
             Từ CV thô đến bản hoàn chỉnh vượt ATS — chỉ mất chưa đến 5 phút.
           </p>
-        </motion.div>
-
-        {/* Connecting line (desktop) */}
-        <div ref={lineRef} className="hidden lg:block relative mb-0 px-[calc(100%/6)]">
-          <div className="h-0.5 bg-zinc-200 w-full absolute top-0 left-0" />
-          <motion.div
-            className="h-0.5 bg-black w-full absolute top-0 left-0 origin-left"
-            initial={{ scaleX: 0 }}
-            animate={isLineInView ? { scaleX: 1 } : { scaleX: 0 }}
-            transition={{ duration: 1.2, ease: [0.32, 0.72, 0, 1], delay: 0.2 }}
-          />
         </div>
 
-        {/* Steps grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-6">
-          {STEPS.map(({ number, title, description, color, MockupComponent }, idx) => (
-            <motion.div
-              key={number}
-              initial={{ opacity: 0, y: 48 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-60px" }}
-              transition={{
-                duration: 0.7,
-                ease: [0.32, 0.72, 0, 1],
-                delay: idx * 0.15,
-              }}
-              className="flex flex-col"
-            >
-              {/* Step number dot — sits on the line */}
-              <div className="flex items-center gap-4 mb-8 mt-4 lg:mt-0 lg:-mt-5">
+        {/* Two column layout */}
+        <div className="flex flex-col lg:flex-row gap-16 lg:gap-24">
+
+          {/* LEFT — scrolling steps */}
+          <div className="w-full lg:w-1/2">
+            {STEPS.map(({ number, title, description, color, Mockup }, idx) => (
+              <div
+                key={number}
+                ref={(el) => { stepRefs.current[idx] = el; }}
+                className="min-h-[80vh] flex flex-col justify-center border-l-4 pl-8 transition-all duration-500"
+                style={{
+                  borderColor: activeStep === idx ? color : "#e4e4e7",
+                  opacity: activeStep === idx ? 1 : 0.3,
+                }}
+              >
                 <div
-                  className="w-10 h-10 border-4 border-black flex items-center justify-center font-black text-sm text-black flex-shrink-0"
-                  style={{ background: color }}
+                  className="w-12 h-12 border-4 border-black flex items-center justify-center font-black text-lg text-black flex-shrink-0 mb-6"
+                  style={{ background: color, boxShadow: "4px 4px 0 0 #000" }}
                 >
                   {number}
                 </div>
-                <div className="h-0.5 flex-1 bg-zinc-200 lg:hidden" />
-              </div>
+                <h3 className="text-4xl font-black text-black uppercase mb-4">{title}</h3>
+                <p className="text-xl font-bold text-zinc-600 leading-relaxed max-w-[35ch]">{description}</p>
 
-              {/* Mockup */}
-              <div className="mb-6 border-4 border-black neo-shadow">
-                <MockupComponent />
+                {/* Mobile inline mockup */}
+                <div className="block lg:hidden mt-8 border-4 border-black" style={{ boxShadow: "6px 6px 0 0 #F26F21" }}>
+                  <Mockup />
+                </div>
               </div>
+            ))}
+          </div>
 
-              {/* Content */}
-              <h3 className="text-3xl font-black text-black uppercase mb-3">{title}</h3>
-              <p className="text-base font-bold text-zinc-600 leading-relaxed">{description}</p>
-            </motion.div>
-          ))}
+          {/* RIGHT — fixed-position mockup panel (JS-driven, not CSS sticky) */}
+          <div className="hidden lg:block w-full lg:w-1/2">
+            <div
+              style={{
+                position: "sticky",
+                top: "20vh",
+                // Fallback: nếu sticky không hoạt động với Lenis,
+                // component vẫn hiển thị đúng ở vị trí ban đầu
+              }}
+            >
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeStep}
+                  initial={{ opacity: 0, y: 24 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -24 }}
+                  transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
+                  className="border-4 border-black"
+                  style={{ boxShadow: "8px 8px 0 0 #F26F21" }}
+                >
+                  <ActiveMockup />
+                </motion.div>
+              </AnimatePresence>
+
+              {/* Step indicators */}
+              <div className="flex gap-2 mt-6 justify-center">
+                {STEPS.map((step, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setActiveStep(idx)}
+                    className="h-1.5 rounded-full transition-all duration-500"
+                    style={{
+                      width: activeStep === idx ? "32px" : "8px",
+                      background: activeStep === idx ? step.color : "#d4d4d8",
+                    }}
+                    aria-label={`Bước ${idx + 1}`}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+
         </div>
-
-        {/* Bottom CTA */}
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.5 }}
-          className="mt-20 flex flex-col sm:flex-row items-start sm:items-center gap-6"
-        >
-          <div className="flex items-center gap-3 text-sm font-bold text-zinc-500 border-l-4 border-[var(--fpt-orange)] pl-4">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="text-[var(--fpt-orange)]" aria-hidden="true">
-              <circle cx="12" cy="12" r="10" />
-              <polyline points="12 6 12 12 16 14" />
-            </svg>
-            Tạo CV hoàn chỉnh trong dưới 5 phút
-          </div>
-          <div className="flex items-center gap-3 text-sm font-bold text-zinc-500 border-l-4 border-black pl-4">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-            </svg>
-            Không lưu CV — bảo mật tuyệt đối
-          </div>
-        </motion.div>
       </div>
     </section>
   );

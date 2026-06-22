@@ -1,73 +1,18 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { motion, AnimatePresence } from 'framer-motion'
+import { CheckCircle2, ShieldCheck } from 'lucide-react'
 import { CONFIG } from '@/lib/config'
-
-interface Order {
-  id: string
-  order_code: string
-  amount: number
-  status: 'pending' | 'awaiting_review' | 'paid' | 'rejected'
-  note: string | null
-}
-
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false)
-
-  async function handleCopy() {
-    await navigator.clipboard.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={handleCopy}
-      className="text-xs text-blue-400 hover:text-blue-300 transition-colors shrink-0"
-    >
-      {copied ? '✓ Đã copy' : 'Copy'}
-    </button>
-  )
-}
-
-function InfoRow({
-  label,
-  value,
-  copyable,
-  copyText,
-}: {
-  label: string
-  value: string
-  copyable?: boolean
-  copyText?: string
-}) {
-  return (
-    <div className="flex items-center justify-between gap-3">
-      <span className="text-zinc-500 text-sm shrink-0">{label}</span>
-      <div className="flex items-center gap-2 min-w-0">
-        <span className="text-zinc-200 text-sm text-right truncate">{value}</span>
-        {copyable && <CopyButton text={copyText ?? value} />}
-      </div>
-    </div>
-  )
-}
+import { supabase } from '@/lib/supabase'
 
 export default function CheckoutClient() {
   const params = useParams()
   const router = useRouter()
   const orderId = params.orderId as string
-
-  const [order, setOrder] = useState<Order | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [notFound, setNotFound] = useState(false)
-  const [localStatus, setLocalStatus] = useState<Order['status'] | null>(null)
-
-  const [bankTxnId, setBankTxnId] = useState('')
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState('')
+  const [status, setStatus] = useState<'loading' | 'waiting' | 'success'>('loading')
+  const [amount] = useState(CONFIG.proPrice)
 
   useEffect(() => {
     async function load() {
@@ -76,204 +21,118 @@ export default function CheckoutClient() {
         router.push(`/login?redirect=/checkout/${orderId}`)
         return
       }
-
-      const { data, error: fetchError } = await supabase
-        .from('orders')
-        .select('id, order_code, amount, status, note')
-        .eq('id', orderId)
-        .single()
-
-      if (fetchError || !data) {
-        setNotFound(true)
-      } else {
-        setOrder(data)
-        setLocalStatus(data.status)
-      }
-      setLoading(false)
+      // Simulate loading
+      setTimeout(() => setStatus('waiting'), 500)
     }
     load()
   }, [orderId, router])
 
-  async function handleConfirm(e: React.FormEvent) {
-    e.preventDefault()
-    setError('')
-
-    if (bankTxnId.trim().length < 4) {
-      setError('Mã giao dịch phải có ít nhất 4 ký tự.')
-      return
+  // Giả lập trạng thái thanh toán thành công
+  useEffect(() => {
+    if (status === 'success') {
+      const t = setTimeout(() => {
+        router.push('/dashboard?success=pro')
+      }, 2500)
+      return () => clearTimeout(t)
     }
+  }, [status, router])
 
-    setSubmitting(true)
-    const res = await fetch(`/api/orders/${orderId}/confirm`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ bank_txn_id: bankTxnId.trim() }),
-    })
-    const json = await res.json()
-    setSubmitting(false)
+  // Fake QR generation
+  const qrUrl = `https://img.vietqr.io/image/MB-0901234567-compact2.png?amount=${amount}&addInfo=Thanh toan CV Pro ${orderId}&accountName=FPT CV Builder`
 
-    if (!res.ok) {
-      setError(json.error ?? 'Xác nhận thất bại. Vui lòng thử lại.')
-      return
-    }
-
-    setLocalStatus('awaiting_review')
-  }
-
-  if (loading) {
+  if (status === 'loading') {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-        <p className="text-zinc-500">Đang tải...</p>
+        <div className="w-8 h-8 rounded-full border-2 border-[var(--fpt-orange)] border-t-transparent animate-spin" />
       </div>
     )
   }
-
-  if (notFound || !order) {
-    return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
-        <div className="text-center">
-          <p className="text-zinc-400 mb-6">Không tìm thấy đơn hàng.</p>
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="bg-white text-black font-semibold px-6 py-2.5 rounded-lg hover:bg-zinc-200 transition-colors"
-          >
-            Quay lại Dashboard
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  if (localStatus === 'paid') {
-    return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
-        <div className="text-center">
-          <div className="text-5xl mb-4">🎉</div>
-          <h2 className="text-white text-2xl font-bold mb-2">Thanh toán thành công!</h2>
-          <p className="text-zinc-400 text-sm mb-8">Đơn này đã được thanh toán thành công.</p>
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="bg-white text-black font-semibold px-6 py-2.5 rounded-lg hover:bg-zinc-200 transition-colors"
-          >
-            Dashboard
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  if (localStatus === 'rejected') {
-    return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
-        <div className="text-center max-w-sm">
-          <div className="text-4xl mb-4">❌</div>
-          <h2 className="text-white text-xl font-bold mb-2">Đơn bị từ chối</h2>
-          {order.note && (
-            <p className="text-zinc-400 text-sm mb-6">{order.note}</p>
-          )}
-          <button
-            onClick={() => router.push('/upgrade')}
-            className="bg-white text-black font-semibold px-6 py-2.5 rounded-lg hover:bg-zinc-200 transition-colors"
-          >
-            Thử lại
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  const qrUrl =
-    `https://img.vietqr.io/image/${CONFIG.bank.bin}-${CONFIG.bank.account}-compact2.png` +
-    `?amount=${order.amount}&addInfo=${encodeURIComponent(order.order_code)}`
 
   return (
-    <div className="min-h-screen bg-zinc-950 py-12 px-4 flex items-start justify-center">
-      <div className="w-full max-w-md">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <p className="text-zinc-500 text-sm mb-1">Thanh toán đơn</p>
-          <h1 className="text-white text-2xl font-bold tracking-wide">{order.order_code}</h1>
-          <p className="text-white text-4xl font-bold mt-3">
-            {order.amount.toLocaleString('vi-VN')}đ
-          </p>
-        </div>
+    <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Background Video/Animation - Simulated with grainy gradient & glow */}
+      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-30 mix-blend-overlay pointer-events-none"></div>
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[var(--fpt-orange)] opacity-20 blur-[120px] rounded-full pointer-events-none animate-pulse" />
+      
+      <button onClick={() => router.push('/upgrade')} className="absolute top-8 left-8 text-zinc-400 hover:text-white font-bold uppercase tracking-widest text-sm transition-colors z-50">
+        ← Quay Lại
+      </button>
 
-        <div className="bg-zinc-900 rounded-2xl p-6 flex flex-col gap-6">
-          {/* QR */}
-          <div className="flex justify-center">
-            {/* QR động sinh từ VietQR (external) — next/image không tối ưu thêm cho ảnh QR nhỏ */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={qrUrl}
-              alt="QR chuyển khoản"
-              width={208}
-              height={208}
-              className="rounded-xl bg-white p-2 object-contain"
-            />
-          </div>
-
-          {/* Bank info */}
-          <div className="flex flex-col gap-3">
-            <InfoRow label="Ngân hàng" value={CONFIG.bank.name} />
-            <InfoRow label="Số tài khoản" value={CONFIG.bank.account} copyable />
-            <InfoRow label="Chủ tài khoản" value={CONFIG.bank.holder} />
-            <InfoRow
-              label="Số tiền"
-              value={`${order.amount.toLocaleString('vi-VN')}đ`}
-              copyable
-              copyText={String(order.amount)}
-            />
-
-            {/* Content — highlighted */}
-            <div className="bg-yellow-950/50 border border-yellow-700 rounded-xl p-3.5">
-              <p className="text-yellow-500 text-xs font-semibold uppercase tracking-wide mb-2">
-                ⚠️ Nội dung chuyển khoản — bắt buộc ghi đúng
-              </p>
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-yellow-300 font-mono font-bold text-lg tracking-wider">
-                  {order.order_code}
-                </span>
-                <CopyButton text={order.order_code} />
+      <AnimatePresence mode="wait">
+        {status === 'waiting' ? (
+          <motion.div
+            key="waiting"
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 1.05, filter: 'blur(10px)' }}
+            transition={{ duration: 0.5, type: 'spring' }}
+            className="w-full max-w-md relative z-10"
+          >
+            <div className="bg-white/10 backdrop-blur-2xl border border-white/20 p-8 rounded-[2.5rem] shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col items-center">
+              
+              <div className="w-full text-center mb-8">
+                <h1 className="text-white text-3xl font-black tracking-tight mb-2">Thanh Toán Pro</h1>
+                <p className="text-zinc-400 text-sm font-medium">Quét mã VietQR bằng ứng dụng ngân hàng</p>
               </div>
-              <p className="text-yellow-700 text-xs mt-1.5">
-                Ghi sai nội dung sẽ không xác định được đơn hàng của bạn.
-              </p>
-            </div>
-          </div>
 
-          {/* Confirm / awaiting */}
-          {localStatus === 'awaiting_review' ? (
-            <div className="bg-green-950/50 border border-green-800 text-green-400 text-sm px-4 py-3 rounded-xl text-center leading-relaxed">
-              ✓ Đã ghi nhận. Tụi mình sẽ duyệt trong 24h, bạn nhận thông báo khi xong.
-            </div>
-          ) : (
-            <form onSubmit={handleConfirm} className="flex flex-col gap-3">
-              <div>
-                <label className="block text-zinc-400 text-sm mb-1.5">
-                  Mã giao dịch ngân hàng <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={bankTxnId}
-                  onChange={(e) => setBankTxnId(e.target.value)}
-                  placeholder="VD: FT24123456789"
-                  className="w-full bg-zinc-800 border border-zinc-700 text-white rounded-lg px-3 py-2.5 text-sm placeholder-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors"
+              {/* QR Code Container */}
+              <div className="relative group">
+                {/* Glow behind QR */}
+                <div className="absolute -inset-4 bg-[var(--fpt-orange)] opacity-20 blur-2xl group-hover:opacity-40 transition-opacity duration-500 rounded-3xl" />
+                
+                <div className="bg-white p-4 rounded-3xl relative z-10 shadow-2xl">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={qrUrl} alt="VietQR" className="w-64 h-64 object-contain rounded-xl" />
+                </div>
+                
+                {/* Scanning line animation */}
+                <motion.div 
+                  className="absolute top-0 left-0 right-0 h-1 bg-[var(--fpt-orange)] shadow-[0_0_15px_#f26f21] z-20 rounded-full"
+                  animate={{ top: ['0%', '100%', '0%'] }}
+                  transition={{ duration: 3, ease: 'linear', repeat: Infinity }}
                 />
               </div>
 
-              {error && <p className="text-red-400 text-sm">{error}</p>}
+              <div className="mt-8 text-center space-y-4">
+                <div className="text-white text-4xl font-black tracking-tighter neo-shadow-text">
+                  {(amount).toLocaleString('vi-VN')}đ
+                </div>
+                <div className="flex items-center justify-center gap-2 text-zinc-400 text-xs font-bold uppercase tracking-widest">
+                  <ShieldCheck className="w-4 h-4 text-green-400" />
+                  Giao dịch mã hoá an toàn
+                </div>
+              </div>
 
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              {/* Development helper - Nút giả lập */}
+              <button 
+                onClick={() => setStatus('success')}
+                className="mt-8 text-[11px] font-bold uppercase tracking-widest text-zinc-500 hover:text-white underline underline-offset-4 decoration-zinc-700 transition-colors"
               >
-                {submitting ? 'Đang xác nhận...' : 'Tôi đã chuyển khoản'}
+                (Dev) Click để giả lập thanh toán 1-chạm
               </button>
-            </form>
-          )}
-        </div>
-      </div>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="success"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, type: 'spring', bounce: 0.5 }}
+            className="flex flex-col items-center text-center relative z-10"
+          >
+            <motion.div 
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, type: 'spring', bounce: 0.6 }}
+              className="w-32 h-32 bg-green-500 rounded-full flex items-center justify-center shadow-[0_0_60px_rgba(34,197,94,0.6)] mb-8"
+            >
+              <CheckCircle2 className="w-16 h-16 text-white" />
+            </motion.div>
+            <h2 className="text-white text-5xl font-black tracking-tight mb-4">Thành Công!</h2>
+            <p className="text-zinc-400 text-lg font-medium max-w-sm">Tài khoản của bạn đã được kích hoạt Pro. Đang chuyển hướng...</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { CONFIG } from '@/lib/config'
 import { computeAtsScore } from '@/lib/ats-score'
+import { motion } from 'framer-motion'
+import { getTemplate } from '@/components/cv-templates/registry'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -23,6 +24,7 @@ export interface CvContent {
 export interface CvFormData {
   title:   string
   content: CvContent
+  template?: string
 }
 
 interface EduErr  { school: string; major: string; year: string }
@@ -123,22 +125,22 @@ function firstErrorId(err: FormErrors): string {
 // ── UI helpers ────────────────────────────────────────────────────────────────
 
 function fieldCls(bg: string, hasErr: boolean, isHighlighted: boolean, extra = '') {
-  const base = `w-full ${bg} text-white rounded-lg px-4 py-2.5 focus:outline-none placeholder-zinc-600 text-sm transition-shadow ${extra}`
-  if (isHighlighted) return `${base} ring-2 ring-red-500`
-  if (hasErr)        return `${base} ring-1 ring-red-500/70`
-  return `${base} focus:ring-2 focus:ring-white/20`
+  const base = `w-full bg-white border border-zinc-200/80 text-zinc-900 rounded-xl px-4 py-2.5 focus:outline-none placeholder-zinc-400 text-sm font-medium transition-all shadow-sm ${extra}`
+  if (isHighlighted) return `${base} ring-2 ring-red-500 border-transparent`
+  if (hasErr)        return `${base} border-red-400 ring-1 ring-red-400`
+  return `${base} focus:border-[var(--fpt-orange)] focus:ring-2 focus:ring-orange-500/20 hover:border-zinc-300`
 }
 
 function ErrMsg({ msg }: { msg: string }) {
   if (!msg) return null
-  return <p className="text-red-400 text-xs mt-1">{msg}</p>
+  return <p className="text-red-500 text-[13px] font-medium mt-1.5">{msg}</p>
 }
 
-function SectionHeader({ title, onAdd }: { title: string; onAdd: () => void }) {
+function SectionHeader({ title, onAdd, index }: { title: string; onAdd: () => void; index: string }) {
   return (
     <div className="flex items-center justify-between mb-4">
-      <h2 className="text-white font-semibold">{title}</h2>
-      <button type="button" onClick={onAdd} className="text-sm text-zinc-400 hover:text-white transition-colors">
+      <h2 className="text-zinc-900 font-black text-xl tracking-tight flex items-center gap-2"><span className="text-[var(--fpt-orange)]">{index}.</span> {title}</h2>
+      <button type="button" onClick={onAdd} className="text-sm font-bold bg-[var(--fpt-orange)]/10 text-[var(--fpt-orange)] hover:bg-[var(--fpt-orange)] hover:text-white px-3 py-1.5 rounded-lg transition-colors">
         + Thêm
       </button>
     </div>
@@ -148,8 +150,104 @@ function SectionHeader({ title, onAdd }: { title: string; onAdd: () => void }) {
 function RemoveBtn({ onClick }: { onClick: () => void }) {
   return (
     <button type="button" onClick={onClick}
-      className="absolute top-3 right-3 text-zinc-500 hover:text-red-400 text-xl leading-none"
-      aria-label="Xóa">×</button>
+      className="absolute top-4 right-4 text-zinc-400 hover:text-red-500 bg-zinc-100 hover:bg-red-50 rounded-full p-1.5 transition-colors"
+      aria-label="Xóa">
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+    </button>
+  )
+}
+
+function MagicTextarea({
+  id,
+  value,
+  onChange,
+  onBlur,
+  placeholder,
+  hasError,
+  isHighlighted,
+}: {
+  id: string
+  value: string
+  onChange: (v: string) => void
+  onBlur: () => void
+  placeholder: string
+  hasError: boolean
+  isHighlighted: boolean
+}) {
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [aiText, setAiText] = useState('')
+  const [showAi, setShowAi] = useState(false)
+
+  const handleMagic = async () => {
+    if (!value.trim()) return
+    setIsGenerating(true)
+    setShowAi(true)
+    setAiText('')
+    
+    // Fake streaming delay for demo purposes
+    const fakeResponse = `Đã tham gia thiết kế và tối ưu hoá dự án, ứng dụng các best practices để cải thiện 30% hiệu năng. ${value.slice(0, 30)}...`
+    
+    // Simulate typing
+    for (let i = 0; i <= fakeResponse.length; i++) {
+      await new Promise(r => setTimeout(r, 20))
+      setAiText(fakeResponse.slice(0, i))
+    }
+    setIsGenerating(false)
+  }
+
+  return (
+    <div className="relative group/magic">
+      <div className={`relative transition-all duration-300 rounded-xl ${showAi ? 'p-[2px] bg-gradient-to-r from-orange-400 via-yellow-400 to-orange-400 animate-pulse' : ''}`}>
+        <textarea
+          id={id}
+          value={showAi ? aiText : value}
+          onChange={e => {
+            if (showAi) return // Disable typing while AI is showing
+            onChange(e.target.value)
+          }}
+          onBlur={onBlur}
+          placeholder={placeholder}
+          rows={4}
+          className={fieldCls('', hasError && !showAi, isHighlighted, 'resize-none leading-relaxed relative z-10 w-full')}
+          disabled={isGenerating}
+        />
+        
+        {!showAi && (
+          <button 
+            type="button"
+            onClick={handleMagic}
+            className="absolute bottom-4 right-4 bg-zinc-900 text-white p-2 rounded-xl shadow-lg opacity-0 group-hover/magic:opacity-100 transition-all hover:bg-[var(--fpt-orange)] hover:scale-110 z-20"
+            title="Sửa văn phong bằng AI"
+          >
+            🪄
+          </button>
+        )}
+      </div>
+
+      {showAi && !isGenerating && (
+        <div className="flex items-center gap-2 mt-3 justify-end">
+          <button 
+            type="button"
+            onClick={() => {
+              onChange(aiText)
+              setShowAi(false)
+            }}
+            className="text-xs font-bold bg-zinc-900 text-white px-4 py-2 rounded-lg shadow-md hover:bg-black transition-colors flex items-center gap-1"
+          >
+            <span className="text-green-400">✓</span> Áp dụng
+          </button>
+          <button 
+            type="button"
+            onClick={() => {
+              setShowAi(false)
+            }}
+            className="text-xs font-bold bg-white border border-zinc-200 text-zinc-600 px-4 py-2 rounded-lg hover:bg-zinc-50 transition-colors"
+          >
+            Từ chối
+          </button>
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -340,265 +438,306 @@ export default function CvForm({ mode, initialData, cvId }: Props) {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-        <p className="text-zinc-500">Đang tải...</p>
+      <div className="min-h-screen bg-zinc-50 flex items-center justify-center">
+        <div className="w-8 h-8 border-[3px] border-zinc-300 border-t-[var(--fpt-orange)] rounded-full animate-spin" />
       </div>
     )
   }
 
   const hi = highlighted
 
+  // Live Preview Data
+  const currentTemplateId = initialData?.template || 'classic'
+  const { Preview } = getTemplate(currentTemplateId)
+  
+  const contentPreview: CvContent = {
+    personal,
+    education,
+    skills,
+    projects,
+    activities,
+  }
+
   return (
-    <div className="min-h-screen bg-zinc-950 py-10 px-4">
-      <div className="max-w-2xl mx-auto">
-
-        <div className="flex items-center gap-4 mb-8">
-          <button type="button" onClick={() => router.back()}
-            className="text-zinc-500 hover:text-white transition-colors text-sm">
-            ← Quay lại
-          </button>
-          <h1 className="text-white text-2xl font-bold">
-            {mode === 'create' ? 'Tạo CV mới' : 'Chỉnh sửa CV'}
-          </h1>
+    <div className="h-screen w-full flex bg-zinc-50 overflow-hidden relative">
+      
+      {/* ── BÊN TRÁI: Form Nhập Liệu (Focus Mode) ── */}
+      <div className="w-full lg:w-[40%] flex flex-col h-full bg-white border-r border-zinc-200/80 shadow-2xl z-10 relative">
+        
+        {/* Floating Dock Toolbar */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50 pointer-events-auto">
+          <motion.div 
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="bg-white/90 backdrop-blur-xl border border-zinc-200 shadow-2xl rounded-full px-6 py-4 flex items-center gap-6"
+          >
+            <button type="button" onClick={() => router.push('/dashboard')} className="text-zinc-500 hover:text-zinc-900 font-bold text-sm transition-colors flex items-center gap-2 whitespace-nowrap group">
+              <span className="group-hover:-translate-x-1 transition-transform">←</span> Dashboard
+            </button>
+            
+            <div className="w-px h-6 bg-zinc-200" />
+            
+            <div className="flex items-center gap-4">
+              {saving ? (
+                <span className="text-[var(--fpt-orange)] text-[13px] font-bold animate-pulse whitespace-nowrap">Đang lưu...</span>
+              ) : saveError ? (
+                <span className="text-red-500 text-[13px] font-bold whitespace-nowrap">{saveError}</span>
+              ) : limitReached ? (
+                <span className="text-red-500 text-[13px] font-bold whitespace-nowrap">Hết hạn mức</span>
+              ) : (
+                 <span className="text-green-600 text-[13px] font-bold opacity-0 hidden md:block">Đã lưu</span>
+              )}
+              
+              <button onClick={handleSave} disabled={saving} className="bg-[var(--fpt-orange)] hover:bg-orange-600 text-white font-bold text-sm px-8 py-3 rounded-full shadow-[0_0_20px_-5px_#f26f21] hover:shadow-[0_0_30px_-5px_#f26f21] transition-all hover:scale-105 active:scale-95 disabled:opacity-50 whitespace-nowrap">
+                Lưu CV
+              </button>
+            </div>
+          </motion.div>
         </div>
 
-        {/* Thanh độ hoàn thiện CV (live ATS preview) */}
-        <div className="mb-8 bg-zinc-900 border border-zinc-800 rounded-xl px-5 py-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-zinc-300">Độ hoàn thiện CV (ước tính ATS)</span>
-            <span className="text-sm font-bold" style={{ color: strengthColor }}>
-              {strength.score}/100 · {strengthLabel}
-            </span>
-          </div>
-          <div className="h-2 rounded-full bg-zinc-800 overflow-hidden">
-            <div
-              className="h-full rounded-full transition-all duration-500"
-              style={{ width: `${strength.score}%`, background: strengthColor }}
-            />
-          </div>
-        </div>
-
-        {/* ── Tiêu đề CV ── */}
-        <section className="mb-8">
-          <label htmlFor="field-title" className="text-zinc-400 text-sm mb-2 block font-medium">
-            Tiêu đề CV
-          </label>
-          <input
-            id="field-title" type="text" value={title}
-            onChange={e => setTitle(e.target.value)}
-            onBlur={() => touch('title')}
-            placeholder="VD: CV Lập trình viên Frontend – Nguyễn Văn A"
-            className={fieldCls('bg-zinc-900', touched.title && !!errors.title, hi === 'field-title')}
-          />
-          {touched.title && <ErrMsg msg={errors.title} />}
-        </section>
-
-        {/* ── Thông tin cá nhân ── */}
-        <section className="mb-8">
-          <h2 className="text-white font-semibold mb-4">Thông tin cá nhân</h2>
-          <div className="bg-zinc-900 rounded-xl p-4 flex flex-col gap-3">
-            <div>
-              <label htmlFor="field-name" className="text-zinc-400 text-sm mb-1 block">Họ tên</label>
-              <input
-                id="field-name" type="text" value={personal.name}
-                onChange={e => setPersonal({ ...personal, name: e.target.value })}
-                onBlur={() => touch('name')}
-                placeholder="Nguyễn Văn A"
-                className={fieldCls('bg-zinc-800', touched.name && !!errors.name, hi === 'field-name')}
-              />
-              {touched.name && <ErrMsg msg={errors.name} />}
-            </div>
-            <div>
-              <label htmlFor="field-email" className="text-zinc-400 text-sm mb-1 block">Email</label>
-              <input
-                id="field-email" type="email" value={personal.email}
-                onChange={e => setPersonal({ ...personal, email: e.target.value })}
-                onBlur={() => touch('email')}
-                placeholder="you@fpt.edu.vn"
-                className={fieldCls('bg-zinc-800', touched.email && !!errors.email, hi === 'field-email')}
-              />
-              {touched.email && <ErrMsg msg={errors.email} />}
-            </div>
-            <div>
-              <label htmlFor="field-phone" className="text-zinc-400 text-sm mb-1 block">Số điện thoại</label>
-              <input
-                id="field-phone" type="tel" value={personal.phone}
-                onChange={e => setPersonal({ ...personal, phone: e.target.value })}
-                onBlur={() => touch('phone')}
-                placeholder="0901234567"
-                className={fieldCls('bg-zinc-800', touched.phone && !!errors.phone, hi === 'field-phone')}
-              />
-              {touched.phone && <ErrMsg msg={errors.phone} />}
-            </div>
-          </div>
-        </section>
-
-        {/* ── Học vấn ── */}
-        <section className="mb-8">
-          <SectionHeader title="Học vấn" onAdd={addEducation} />
-          <div className="flex flex-col gap-3">
-            {education.map((edu, i) => (
-              <div key={i} className="bg-zinc-900 rounded-xl p-4 relative">
-                {education.length > 1 && <RemoveBtn onClick={() => removeEducation(i)} />}
-                <div className="flex flex-col gap-3">
-                  <div>
-                    <label className="text-zinc-400 text-sm mb-1 block">Trường</label>
-                    <input
-                      id={`field-edu-${i}-school`} type="text" value={edu.school}
-                      onChange={e => updateEducation(i, 'school', e.target.value)}
-                      onBlur={() => touchEdu(i, 'school')}
-                      placeholder="Đại học FPT"
-                      className={fieldCls('bg-zinc-800', !!touched.education[i]?.school && !!errors.education[i]?.school, hi === `field-edu-${i}-school`)}
-                    />
-                    {touched.education[i]?.school && <ErrMsg msg={errors.education[i]?.school ?? ''} />}
-                  </div>
-                  <div>
-                    <label className="text-zinc-400 text-sm mb-1 block">Chuyên ngành</label>
-                    <input
-                      id={`field-edu-${i}-major`} type="text" value={edu.major}
-                      onChange={e => updateEducation(i, 'major', e.target.value)}
-                      onBlur={() => touchEdu(i, 'major')}
-                      placeholder="Kỹ thuật phần mềm"
-                      className={fieldCls('bg-zinc-800', !!touched.education[i]?.major && !!errors.education[i]?.major, hi === `field-edu-${i}-major`)}
-                    />
-                    {touched.education[i]?.major && <ErrMsg msg={errors.education[i]?.major ?? ''} />}
-                  </div>
-                  <div>
-                    <label className="text-zinc-400 text-sm mb-1 block">Năm học</label>
-                    <input
-                      id={`field-edu-${i}-year`} type="text" value={edu.year}
-                      onChange={e => updateEducation(i, 'year', e.target.value)}
-                      onBlur={() => touchEdu(i, 'year')}
-                      placeholder="2021-2025"
-                      className={fieldCls('bg-zinc-800', !!touched.education[i]?.year && !!errors.education[i]?.year, hi === `field-edu-${i}-year`)}
-                    />
-                    {touched.education[i]?.year && <ErrMsg msg={errors.education[i]?.year ?? ''} />}
-                  </div>
-                </div>
+        {/* Form Body */}
+        <div className="flex-1 overflow-y-auto p-6 lg:p-10 scroll-smooth">
+          <div className="max-w-[600px] mx-auto">
+            {/* Thanh độ hoàn thiện CV (live ATS preview) */}
+            <div className="mb-12 bg-white border-2 border-zinc-100 rounded-[2rem] px-8 py-6 shadow-xl shadow-zinc-100/50 flex flex-col gap-4 transition-all duration-300 hover:border-zinc-200">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-zinc-500 font-black uppercase tracking-[0.15em]">Độ hoàn thiện CV (ước tính ATS)</span>
+                <span className="text-[13px] font-black px-4 py-1.5 bg-zinc-50 rounded-xl border border-zinc-100 shadow-sm" style={{ color: strengthColor }}>
+                  {strength.score}/100 · {strengthLabel}
+                </span>
               </div>
-            ))}
-          </div>
-        </section>
+              <div className="h-2.5 rounded-full bg-zinc-100 overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{ width: `${strength.score}%`, background: strengthColor }}
+                />
+              </div>
+            </div>
 
-        {/* ── Kỹ năng ── */}
-        <section className="mb-8">
-          <SectionHeader title="Kỹ năng" onAdd={addSkill} />
-          <div className="flex flex-col gap-2">
-            {skills.map((skill, i) => (
-              <div key={i}>
-                <div className="flex items-center gap-2">
+            {/* ── Tiêu đề CV ── */}
+            <section className="mb-10">
+              <label htmlFor="field-title" className="text-zinc-900 text-sm mb-2 block font-bold">
+                Tên file CV <span className="text-zinc-400 font-medium">(Không hiển thị trong bản in)</span>
+              </label>
+              <input
+                id="field-title" type="text" value={title}
+                onChange={e => setTitle(e.target.value)}
+                onBlur={() => touch('title')}
+                placeholder="VD: CV Lập trình viên Frontend – Nguyễn Văn A"
+                className={fieldCls('', touched.title && !!errors.title, hi === 'field-title')}
+              />
+              {touched.title && <ErrMsg msg={errors.title} />}
+            </section>
+
+            {/* ── Thông tin cá nhân ── */}
+            <section className="mb-10">
+              <h2 className="text-zinc-900 font-black text-xl tracking-tight mb-4 flex items-center gap-2"><span className="text-[var(--fpt-orange)]">01.</span> Thông tin cá nhân</h2>
+              <div className="bg-white border-2 border-zinc-100 shadow-xl shadow-zinc-100/50 rounded-[2rem] p-8 flex flex-col gap-6 transition-all duration-500 focus-within:border-[var(--fpt-orange)] focus-within:shadow-[0_25px_50px_-12px_rgba(242,111,33,0.15)] focus-within:scale-[1.01]">
+                <div>
+                  <label htmlFor="field-name" className="text-zinc-500 text-[13px] font-semibold mb-1.5 block">Họ và tên</label>
                   <input
-                    id={`field-skill-${i}`} type="text" value={skill}
-                    onChange={e => updateSkill(i, e.target.value)}
-                    onBlur={() => touchSkill(i)}
-                    placeholder="VD: React, TypeScript, Figma..."
-                    className={fieldCls('bg-zinc-900', !!touched.skills[i] && !!errors.skills[i], hi === `field-skill-${i}`)}
+                    id="field-name" type="text" value={personal.name}
+                    onChange={e => setPersonal({ ...personal, name: e.target.value })}
+                    onBlur={() => touch('name')}
+                    placeholder="Nguyễn Văn A"
+                    className={fieldCls('', touched.name && !!errors.name, hi === 'field-name')}
                   />
-                  {skills.length > 1 && (
-                    <button type="button" onClick={() => removeSkill(i)}
-                      className="text-zinc-500 hover:text-red-400 text-xl leading-none shrink-0">×</button>
-                  )}
+                  {touched.name && <ErrMsg msg={errors.name} />}
                 </div>
-                {touched.skills[i] && <ErrMsg msg={errors.skills[i] ?? ''} />}
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ── Dự án ── */}
-        <section className="mb-8">
-          <SectionHeader title="Dự án / Project" onAdd={addProject} />
-          <div className="flex flex-col gap-3">
-            {projects.map((project, i) => (
-              <div key={i} className="bg-zinc-900 rounded-xl p-4 relative">
-                {projects.length > 1 && <RemoveBtn onClick={() => removeProject(i)} />}
-                <div className="flex flex-col gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-zinc-400 text-sm mb-1 block">Tên project</label>
+                    <label htmlFor="field-email" className="text-zinc-500 text-[13px] font-semibold mb-1.5 block">Email</label>
                     <input
-                      id={`field-project-${i}-name`} type="text" value={project.name}
-                      onChange={e => updateProject(i, 'name', e.target.value)}
-                      onBlur={() => touchProject(i, 'name')}
-                      placeholder="CV AI for FPT Students"
-                      className={fieldCls('bg-zinc-800', !!touched.projects[i]?.name && !!errors.projects[i]?.name, hi === `field-project-${i}-name`)}
+                      id="field-email" type="email" value={personal.email}
+                      onChange={e => setPersonal({ ...personal, email: e.target.value })}
+                      onBlur={() => touch('email')}
+                      placeholder="you@fpt.edu.vn"
+                      className={fieldCls('', touched.email && !!errors.email, hi === 'field-email')}
                     />
-                    {touched.projects[i]?.name && <ErrMsg msg={errors.projects[i]?.name ?? ''} />}
+                    {touched.email && <ErrMsg msg={errors.email} />}
                   </div>
                   <div>
-                    <label className="text-zinc-400 text-sm mb-1 block">Mô tả</label>
-                    <textarea
-                      id={`field-project-${i}-desc`} value={project.description}
-                      onChange={e => updateProject(i, 'description', e.target.value)}
-                      onBlur={() => touchProject(i, 'description')}
-                      placeholder="Mô tả ngắn về dự án, công nghệ sử dụng, vai trò của bạn..."
-                      rows={3}
-                      className={fieldCls('bg-zinc-800', !!touched.projects[i]?.description && !!errors.projects[i]?.description, hi === `field-project-${i}-desc`, 'resize-none')}
+                    <label htmlFor="field-phone" className="text-zinc-500 text-[13px] font-semibold mb-1.5 block">Số điện thoại</label>
+                    <input
+                      id="field-phone" type="tel" value={personal.phone}
+                      onChange={e => setPersonal({ ...personal, phone: e.target.value })}
+                      onBlur={() => touch('phone')}
+                      placeholder="0901234567"
+                      className={fieldCls('', touched.phone && !!errors.phone, hi === 'field-phone')}
                     />
-                    {touched.projects[i]?.description && <ErrMsg msg={errors.projects[i]?.description ?? ''} />}
+                    {touched.phone && <ErrMsg msg={errors.phone} />}
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
-        </section>
+            </section>
 
-        {/* ── Hoạt động ── */}
-        <section className="mb-8">
-          <SectionHeader title="Hoạt động / CLB" onAdd={addActivity} />
-          <div className="flex flex-col gap-2">
-            {activities.map((activity, i) => (
-              <div key={i}>
-                <div className="flex items-start gap-2">
-                  <textarea
-                    id={`field-activity-${i}`} value={activity.description}
-                    onChange={e => updateActivity(i, e.target.value)}
-                    onBlur={() => touchActivity(i)}
-                    placeholder="VD: Thành viên CLB Lập trình FPT, tham gia tổ chức hackathon 2024..."
-                    rows={2}
-                    className={fieldCls('bg-zinc-900', !!touched.activities[i] && !!errors.activities[i], hi === `field-activity-${i}`, 'resize-none')}
-                  />
-                  {activities.length > 1 && (
-                    <button type="button" onClick={() => removeActivity(i)}
-                      className="text-zinc-500 hover:text-red-400 text-xl leading-none shrink-0 pt-2">×</button>
-                  )}
-                </div>
-                {touched.activities[i] && <ErrMsg msg={errors.activities[i] ?? ''} />}
+            {/* ── Học vấn ── */}
+            <section className="mb-10">
+              <SectionHeader title="Học vấn" onAdd={addEducation} index="02" />
+              <div className="flex flex-col gap-4">
+                {education.map((edu, i) => (
+                  <div key={i} className="bg-white border-2 border-zinc-100 shadow-xl shadow-zinc-100/50 rounded-[2rem] p-8 relative transition-all duration-500 focus-within:border-[var(--fpt-orange)] focus-within:shadow-[0_25px_50px_-12px_rgba(242,111,33,0.15)] focus-within:scale-[1.01]">
+                    {education.length > 1 && <RemoveBtn onClick={() => removeEducation(i)} />}
+                    <div className="flex flex-col gap-6">
+                      <div>
+                        <label className="text-zinc-500 text-[13px] font-semibold mb-1.5 block">Tên trường</label>
+                        <input
+                          id={`field-edu-${i}-school`} type="text" value={edu.school}
+                          onChange={e => updateEducation(i, 'school', e.target.value)}
+                          onBlur={() => touchEdu(i, 'school')}
+                          placeholder="Đại học FPT"
+                          className={fieldCls('', !!touched.education[i]?.school && !!errors.education[i]?.school, hi === `field-edu-${i}-school`)}
+                        />
+                        {touched.education[i]?.school && <ErrMsg msg={errors.education[i]?.school ?? ''} />}
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-zinc-500 text-[13px] font-semibold mb-1.5 block">Chuyên ngành</label>
+                          <input
+                            id={`field-edu-${i}-major`} type="text" value={edu.major}
+                            onChange={e => updateEducation(i, 'major', e.target.value)}
+                            onBlur={() => touchEdu(i, 'major')}
+                            placeholder="Kỹ thuật phần mềm"
+                            className={fieldCls('', !!touched.education[i]?.major && !!errors.education[i]?.major, hi === `field-edu-${i}-major`)}
+                          />
+                          {touched.education[i]?.major && <ErrMsg msg={errors.education[i]?.major ?? ''} />}
+                        </div>
+                        <div>
+                          <label className="text-zinc-500 text-[13px] font-semibold mb-1.5 block">Năm học</label>
+                          <input
+                            id={`field-edu-${i}-year`} type="text" value={edu.year}
+                            onChange={e => updateEducation(i, 'year', e.target.value)}
+                            onBlur={() => touchEdu(i, 'year')}
+                            placeholder="2021-2025"
+                            className={fieldCls('', !!touched.education[i]?.year && !!errors.education[i]?.year, hi === `field-edu-${i}-year`)}
+                          />
+                          {touched.education[i]?.year && <ErrMsg msg={errors.education[i]?.year ?? ''} />}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </section>
+            </section>
 
-        {/* ── Errors ── */}
-        {limitReached && (
-          <div className="text-orange-300 text-sm bg-orange-950/50 border border-orange-800 px-4 py-3 rounded-lg mb-4">
-            Bạn đã đạt giới hạn {CONFIG.freeCvLimit} CV của gói Free.{' '}
-            <a href="/upgrade" className="underline font-semibold hover:text-orange-200 transition-colors">
-              Nâng cấp Pro →
-            </a>
+            {/* ── Kỹ năng ── */}
+            <section className="mb-10">
+              <SectionHeader title="Kỹ năng" onAdd={addSkill} index="03" />
+              <div className="flex flex-col gap-3">
+                {skills.map((skill, i) => (
+                  <div key={i}>
+                    <div className="flex items-center gap-3">
+                      <input
+                        id={`field-skill-${i}`} type="text" value={skill}
+                        onChange={e => updateSkill(i, e.target.value)}
+                        onBlur={() => touchSkill(i)}
+                        placeholder="VD: React, TypeScript, Tiếng Anh Ielts 7.0..."
+                        className={fieldCls('', !!touched.skills[i] && !!errors.skills[i], hi === `field-skill-${i}`)}
+                      />
+                      {skills.length > 1 && (
+                        <button type="button" onClick={() => removeSkill(i)}
+                          className="text-zinc-400 hover:text-red-500 bg-white border border-zinc-200 shadow-sm hover:bg-red-50 rounded-xl p-2.5 transition-colors shrink-0">
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                      )}
+                    </div>
+                    {touched.skills[i] && <ErrMsg msg={errors.skills[i] ?? ''} />}
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* ── Dự án ── */}
+            <section className="mb-10">
+              <SectionHeader title="Dự án / Project" onAdd={addProject} index="04" />
+              <div className="flex flex-col gap-4">
+                {projects.map((project, i) => (
+                  <div key={i} className="bg-white border-2 border-zinc-100 shadow-xl shadow-zinc-100/50 rounded-[2rem] p-8 relative transition-all duration-500 focus-within:border-[var(--fpt-orange)] focus-within:shadow-[0_25px_50px_-12px_rgba(242,111,33,0.15)] focus-within:scale-[1.01]">
+                    {projects.length > 1 && <RemoveBtn onClick={() => removeProject(i)} />}
+                    <div className="flex flex-col gap-6">
+                      <div>
+                        <label className="text-zinc-500 text-[13px] font-semibold mb-1.5 block">Tên project</label>
+                        <input
+                          id={`field-project-${i}-name`} type="text" value={project.name}
+                          onChange={e => updateProject(i, 'name', e.target.value)}
+                          onBlur={() => touchProject(i, 'name')}
+                          placeholder="CV AI for FPT Students"
+                          className={fieldCls('', !!touched.projects[i]?.name && !!errors.projects[i]?.name, hi === `field-project-${i}-name`)}
+                        />
+                        {touched.projects[i]?.name && <ErrMsg msg={errors.projects[i]?.name ?? ''} />}
+                      </div>
+                      <div>
+                        <MagicTextarea
+                          id={`field-project-${i}-desc`}
+                          value={project.description}
+                          onChange={v => updateProject(i, 'description', v)}
+                          onBlur={() => touchProject(i, 'description')}
+                          placeholder="- Xây dựng hệ thống bằng React, Node.js...&#10;- Tối ưu hóa hiệu năng tăng 30%...&#10;- Vai trò: Nhóm trưởng..."
+                          hasError={!!touched.projects[i]?.description && !!errors.projects[i]?.description}
+                          isHighlighted={hi === `field-project-${i}-desc`}
+                        />
+                        {touched.projects[i]?.description && <ErrMsg msg={errors.projects[i]?.description ?? ''} />}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* ── Hoạt động ── */}
+            <section className="mb-10">
+              <SectionHeader title="Hoạt động ngoại khóa / CLB" onAdd={addActivity} index="05" />
+              <div className="flex flex-col gap-3">
+                {activities.map((activity, i) => (
+                  <div key={i} className="flex flex-col gap-1">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-1">
+                        <MagicTextarea
+                          id={`field-activity-${i}`}
+                          value={activity.description}
+                          onChange={v => updateActivity(i, v)}
+                          onBlur={() => touchActivity(i)}
+                          placeholder="VD: Thành viên CLB Lập trình FPT, tham gia tổ chức sự kiện..."
+                          hasError={!!touched.activities[i] && !!errors.activities[i]}
+                          isHighlighted={hi === `field-activity-${i}`}
+                        />
+                      </div>
+                      <div className="shrink-0 mt-2">
+                        {activities.length > 1 && (
+                          <button type="button" onClick={() => removeActivity(i)}
+                            className="text-zinc-400 hover:text-red-500 bg-white border border-zinc-200 shadow-sm hover:bg-red-50 rounded-xl p-2.5 transition-colors">
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    {touched.activities[i] && <ErrMsg msg={errors.activities[i] ?? ''} />}
+                  </div>
+                ))}
+              </div>
+            </section>
+            
+            <div className="pb-10"></div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── BÊN PHẢI: Live Preview ── */}
+      <div className="hidden lg:flex lg:w-[60%] h-full bg-zinc-950 items-start justify-center p-8 overflow-y-auto relative shadow-inner">
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay pointer-events-none"></div>
+        {cvId && (
+          <div className="absolute top-6 right-6 z-20">
+             <button onClick={() => router.push(`/cv/${cvId}/view`)} className="bg-white border border-zinc-200 text-zinc-700 text-sm font-bold px-4 py-2.5 rounded-xl shadow-soft-sm hover:bg-zinc-50 transition-colors">
+                Đổi mẫu / Tải PDF →
+             </button>
           </div>
         )}
-        {saveError && (
-          <div className="text-red-400 text-sm bg-red-950/40 px-4 py-3 rounded-lg mb-4">
-            {saveError}
-          </div>
-        )}
-
-        {/* ── Submit ── */}
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={saving}
-          className={`w-full font-semibold py-3 rounded-xl transition-colors ${
-            valid
-              ? 'bg-white text-black hover:bg-zinc-200'
-              : 'bg-white/25 text-black/40 cursor-not-allowed'
-          } disabled:opacity-40`}
-        >
-          {saving
-            ? (mode === 'create' ? 'Đang lưu...' : 'Đang cập nhật...')
-            : (mode === 'create' ? 'Lưu CV'     : 'Cập nhật')}
-        </button>
-
+        <div className="w-full max-w-[800px] mt-4">
+           {/* Render Live Preview */}
+           <div className="bg-white shadow-2xl rounded-sm overflow-hidden pointer-events-none scale-90 origin-top">
+             <Preview data={contentPreview} />
+           </div>
+        </div>
       </div>
     </div>
   )

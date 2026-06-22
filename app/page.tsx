@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { createServerSupabase } from '@/lib/supabase-server'
-import { MagneticButton } from '@/components/ui/magnetic-button'
 import { ScrollTellingHero } from '@/components/ui/scroll-telling-hero'
 import { FAQAccordion } from '@/components/ui/faq-accordion'
 import { NewsletterForm } from '@/components/ui/newsletter-form'
@@ -14,6 +13,8 @@ import { PricingSectionAnimated } from '@/components/ui/pricing-section-animated
 import { BeforeAfterSection } from '@/components/ui/before-after-section'
 import { FinalCTASection } from '@/components/ui/final-cta-section'
 import { BackToTopButton } from '@/components/ui/back-to-top'
+import { VelocityMarquee } from '@/components/ui/velocity-marquee'
+import { CurtainFooterReveal } from '@/components/ui/curtain-footer-reveal'
 
 export default async function LandingPage() {
   const supabase = await createServerSupabase()
@@ -28,9 +29,7 @@ export default async function LandingPage() {
         <div className="flex whitespace-nowrap animate-ticker-scroll">
           {[...Array(8)].map((_, i) => (
             <span key={i} className="text-black font-black text-sm uppercase tracking-widest whitespace-nowrap flex items-center gap-6 pr-12">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="text-black inline-block flex-shrink-0" aria-hidden="true">
-                <path d="M12 2C9 7 5 9.5 5 14a7 7 0 0014 0c0-2.5-1-5-3-7.5-.5 2-2 3.5-2 3.5S12 8 12 2z"/>
-              </svg>
+              <span className="text-lg" aria-hidden="true">🔥</span>
               Mở bán sớm: Tặng 100 gói Pro miễn phí cho sinh viên FPT K17/K18 — Hết hạn 30/09/2026
             </span>
           ))}
@@ -52,29 +51,7 @@ export default async function LandingPage() {
         <div className="bg-white relative z-10">
 
           {/* ── Dual-direction Marquee ── */}
-          <section className="border-y border-zinc-200 bg-zinc-50 overflow-hidden">
-            <div className="py-4 border-b border-zinc-200 flex whitespace-nowrap animate-marquee">
-              {[...Array(10)].map((_, i) => (
-                <span key={i} className="text-2xl font-black text-zinc-800 uppercase mx-6 flex items-center gap-5 tracking-tight">
-                  TIN DÙNG BỞI 500+ SINH VIÊN FPT
-                  <span className="text-[var(--fpt-orange)] text-3xl leading-none">•</span>
-                </span>
-              ))}
-            </div>
-            <div className="py-4 flex whitespace-nowrap animate-marquee-reverse">
-              {[
-                'FPT Software', 'VNG Corporation', 'MoMo', 'Tiki', 'VNPT',
-                'Viettel', 'Shopee VN', 'Zalo', 'KMS Technology', 'NashTech',
-                'FPT Software', 'VNG Corporation', 'MoMo', 'Tiki', 'VNPT',
-                'Viettel', 'Shopee VN', 'Zalo', 'KMS Technology', 'NashTech',
-              ].map((co, i) => (
-                <span key={i} className="text-sm font-black text-zinc-500 uppercase mx-6 tracking-widest flex items-center gap-5">
-                  <svg width="6" height="6" viewBox="0 0 6 6" fill="currentColor" aria-hidden="true"><rect width="6" height="6"/></svg>
-                  {co}
-                </span>
-              ))}
-            </div>
-          </section>
+          <VelocityMarquee />
 
           {/* ══ S1.7 STATS ════════════════════════════════════════ */}
           <StatsCounter />
@@ -110,7 +87,7 @@ export default async function LandingPage() {
                 { q: "Điểm ATS Match có thực sự chính xác?", a: "Chúng tôi mô phỏng các thuật toán phân tích từ khóa phổ biến của các phần mềm quản lý nhân sự (ATS) hiện hành. Khi điểm Match của bạn trên 85%, tỷ lệ CV của bạn vượt qua vòng lọc tự động sẽ tăng lên gấp nhiều lần." },
                 { q: "Thanh toán Gói Pro như thế nào?", a: "Chúng tôi hỗ trợ thanh toán 1-chạm qua mã VietQR, cực kỳ phù hợp cho sinh viên. Gói Pro không tự động gia hạn nên bạn hoàn toàn chủ động trong việc quản lý chi phí." },
                 { q: "Dữ liệu CV của tôi có được bảo mật không?", a: "Hoàn toàn. Chúng tôi không chia sẻ dữ liệu CV với bên thứ ba. Mỗi bản CV được mã hóa và chỉ bạn mới có quyền truy cập. Bạn có thể xóa tài khoản và toàn bộ dữ liệu bất kỳ lúc nào." },
-                { q: "Có hỗ trợ ngành nghề nào ngoài CNTT không?", a: "Hiện tại CV AI FPT được tối ưu cho sinh viên FPT University với trọng tâm là ngành CNTT, Kinh tế số, và Kỹ thuật phần mềm. Chúng tôi đang mở rộng sang các ngành khác trong Q3 2025." },
+                { q: "Có hỗ trợ ngành nghề nào ngoài CNTT không?", a: "Hiện tại CV AI được tối ưu cho sinh viên FPT University với trọng tâm là ngành CNTT, Kinh tế số, và Kỹ thuật phần mềm. Chúng tôi đang mở rộng sang các ngành khác trong Q3 2025." },
               ]} />
             </div>
           </section>
@@ -163,7 +140,7 @@ export default async function LandingPage() {
             </div>
             <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 flex flex-col md:flex-row items-center justify-between text-zinc-400 text-sm font-medium pb-6 border-t border-zinc-800 pt-6">
               <div className="flex items-center gap-4 mb-4 md:mb-0">
-                <span>©2026 CV AI FPT</span>
+                <span>©2026 CV AI</span>
                 <span className="flex items-center gap-1">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                   100% Bảo Mật
@@ -180,28 +157,15 @@ export default async function LandingPage() {
               <BackToTopButton />
             </div>
           </footer>
+          {/* ── Curtain reveal logo — sits after footer, inside white area ── */}
+          <CurtainFooterReveal>
+            <Logo isFooter={true} />
+          </CurtainFooterReveal>
+
         </div>
       </main>
 
-      {/* ── Curtain reveal logo at scroll bottom ─────────────────── */}
-      <div className="fixed bottom-0 left-0 w-full bg-[var(--fpt-orange)] z-0 h-[60vh] flex justify-center items-center overflow-hidden">
-        <Logo isFooter={true} />
-      </div>
-      <div className="h-[60vh] w-full pointer-events-none" />
-
       <style>{`
-        @keyframes marquee {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-        .animate-marquee { animation: marquee 22s linear infinite; width: 200%; }
-
-        @keyframes marquee-reverse {
-          0% { transform: translateX(-50%); }
-          100% { transform: translateX(0); }
-        }
-        .animate-marquee-reverse { animation: marquee-reverse 18s linear infinite; width: 200%; }
-
         @keyframes ticker-scroll {
           0% { transform: translateX(0); }
           100% { transform: translateX(-50%); }
