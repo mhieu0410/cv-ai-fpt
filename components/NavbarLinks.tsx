@@ -15,9 +15,10 @@ interface NavbarLinksProps {
 }
 
 const NAV_LINKS = [
-  { label: 'Dashboard', href: '/dashboard' },
-  { label: 'Đơn hàng',  href: '/orders/me' },
-  { label: 'Góp ý',     href: '/feedback?from=navbar' },
+  { label: 'Dashboard',    href: '/dashboard' },
+  { label: 'Khám phá FPT', href: '/companies' },
+  { label: 'Đơn hàng',     href: '/orders/me' },
+  { label: 'Góp ý',        href: '/feedback?from=navbar' },
 ] as const
 
 function shortenEmail(email: string): string {
@@ -95,9 +96,15 @@ export default function NavbarLinks({ email, displayName, showAdmin, planBadge }
             </Link>
           )}
 
-          <span className="text-[13px] font-bold text-zinc-600 select-none" title={email}>
+          <Link
+            href="/account"
+            title="Cài đặt tài khoản"
+            className={`text-[13px] font-bold transition-all hover:-translate-y-0.5 ${
+              isActive('/account') ? 'text-[var(--fpt-orange)]' : 'text-zinc-600 hover:text-[var(--fpt-orange)]'
+            }`}
+          >
             {displayName ? displayName : shortenEmail(email)}
-          </span>
+          </Link>
 
           <button
             onClick={handleSignOut}
@@ -159,12 +166,17 @@ export default function NavbarLinks({ email, displayName, showAdmin, planBadge }
 
           {/* User info + sign out */}
           <div className="p-4 flex flex-col gap-4">
-            <div className="flex items-center gap-3 min-w-0 bg-zinc-50 border-2 border-black p-3 rounded-xl">
+            <Link
+              href="/account"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 min-w-0 bg-zinc-50 border-2 border-black p-3 rounded-xl hover:bg-zinc-100 transition-colors"
+            >
               <PlanBadge badge={planBadge} />
               <span className="text-[13px] font-bold text-black truncate" title={email}>
                 {displayName ? displayName : shortenEmail(email)}
               </span>
-            </div>
+              <span className="ml-auto text-[11px] font-black uppercase tracking-widest text-zinc-400">Tài khoản →</span>
+            </Link>
             <button
               onClick={handleSignOut}
               disabled={signingOut}
