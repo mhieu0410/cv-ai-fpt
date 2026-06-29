@@ -21,6 +21,20 @@ export interface CompanySource {
   url: string
 }
 
+/**
+ * "FPT Insider Secrets" — bí mật thực chiến, cô đọng từ kinh nghiệm cộng đồng.
+ * KHÔNG phải quy trình chính thức của công ty; mang tính tham khảo để ứng viên
+ * chuẩn bị tốt hơn. Mỗi mục gồm vài gạch đầu dòng ngắn gọn.
+ */
+export interface InsiderSecrets {
+  /** Quy trình phỏng vấn ngầm: mấy vòng, vòng nào hay rớt */
+  interview: string[]
+  /** Luật ngầm văn hóa (tinh thần STCo): hòa nhập nhanh, HR thích thái độ nào */
+  culture: string[]
+  /** Đặc thù công việc: lưu ý khi làm thực tế (vd khách Nhật/Mỹ) */
+  jobNature: string[]
+}
+
 export interface Company {
   /** Định danh dùng cho URL: /companies/[slug] */
   slug: string
@@ -57,6 +71,8 @@ export interface Company {
   }
   /** Tech stack / kỹ năng trọng tâm (có thể rỗng cho đơn vị phi công nghệ) */
   techStack: string[]
+  /** Bí mật thực chiến (tham khảo) — phỏng vấn, văn hóa STCo, đặc thù công việc */
+  insiderSecrets?: InsiderSecrets
 
   // ── Metadata ──────────────────────────────────────────────────────────
   website?: string
@@ -117,6 +133,23 @@ export const COMPANIES: Company[] = [
       'Java', '.NET', 'JavaScript/TypeScript', 'Python',
       'ReactJS', 'Angular', 'Spring', 'Cloud (AWS/Azure/GCP)', 'AI/ML',
     ],
+    insiderSecrets: {
+      interview: [
+        'Thường 3–4 vòng: sàng lọc CV/GPA → test năng lực (tiếng Anh + tư duy/logic, có thể có test code) → phỏng vấn kỹ thuật → phỏng vấn HR.',
+        'Vòng hay rớt nhất với fresher là test đầu vào (tiếng Anh + logic); vòng kỹ thuật dễ trượt khi bị hỏi sâu nền tảng (OOP, CSDL, thuật toán cơ bản).',
+        'Vị trí BrSE: tiếng Nhật (JLPT ~N3 trở lên) gần như là điều kiện loại trực tiếp.',
+      ],
+      culture: [
+        'Tinh thần STCo: hài hước, thẳng thắn, ít khoảng cách cấp bậc — sếp hay gọi bằng anh/chị/tên, đừng quá khách sáo.',
+        'HR thích thái độ chủ động, ham học và thật thà về điểm yếu hơn là "chém" quá đà.',
+        'Sẵn sàng nhận việc khó và tinh thần đồng đội ghi điểm nhanh khi mới vào.',
+      ],
+      jobNature: [
+        'Phần lớn làm dự án cho khách nước ngoài → tiếng Anh/Nhật là công cụ sống còn, không chỉ để phỏng vấn.',
+        'Khách Nhật: cực coi trọng Hou-Ren-Sou (báo cáo – liên lạc – thảo luận), đúng giờ, tỉ mỉ, theo quy trình.',
+        'Khách Mỹ/EU: thiên Agile, cần chủ động nêu ý kiến và giao tiếp trực tiếp, rõ ràng.',
+      ],
+    },
     website: 'https://fptsoftware.com',
     lastUpdated: '2026-06-25',
     sources: [
@@ -161,6 +194,23 @@ export const COMPANIES: Company[] = [
       'Java', '.NET', 'Oracle/SQL Server', 'ERP (SAP/Oracle EBS)',
       'Web (React/Angular)', 'Microservices', 'DevOps',
     ],
+    insiderSecrets: {
+      interview: [
+        'Thường: CV → test logic/chuyên môn → phỏng vấn kỹ thuật & nghiệp vụ → HR.',
+        'Vòng hay rớt: phỏng vấn chuyên môn khi thiếu kiến thức nghiệp vụ ngành (ngân hàng, thuế, y tế, hành chính công) hoặc nền tảng CSDL.',
+        'Vị trí BA/tư vấn bị soi kỹ năng phân tích, đặt câu hỏi và giao tiếp.',
+      ],
+      culture: [
+        'Văn hóa thiên "doanh nghiệp/dự án" hơn FSoft: chuyên nghiệp, quy trình, làm với khách lớn & nhà nước — vẫn giữ chất STCo nhưng "chững" hơn.',
+        'HR đánh giá cao sự cẩn thận, kiên nhẫn và tinh thần trách nhiệm với dự án dài hơi.',
+        'Hợp người thích chiều sâu nghiệp vụ hơn là chỉ code.',
+      ],
+      jobNature: [
+        'Nhiều dự án on-site tại khách hàng (bộ ngành, ngân hàng) → cần tác phong chỉn chu, kiên nhẫn với giấy tờ/quy trình.',
+        'Hiểu nghiệp vụ ngành quan trọng ngang code — chịu khó đọc tài liệu domain.',
+        'Deadline gắn mốc nghiệm thu hợp đồng → áp lực theo tiến độ dự án.',
+      ],
+    },
     website: 'https://fpt-is.com',
     lastUpdated: '2026-06-25',
     sources: [
@@ -204,6 +254,23 @@ export const COMPANIES: Company[] = [
       'Networking (TCP/IP, routing)', 'Linux', 'Cloud/Data Center',
       'Java', 'Backend services', 'Mobile/Web (cho mảng dịch vụ số)',
     ],
+    insiderSecrets: {
+      interview: [
+        'Kỹ thuật (mạng/hệ thống): test kiến thức mạng + phỏng vấn; kinh doanh: phỏng vấn thái độ + khả năng chịu KPI.',
+        'Vòng hay rớt với sales: không thể hiện được sự lì đòn, kỹ năng giao tiếp và sẵn sàng chịu doanh số.',
+        'Hay hỏi về tính kỷ luật và khả năng đi thị trường/đi tỉnh.',
+      ],
+      culture: [
+        'Văn hóa "đời", gần gũi, quy mô lớn, nhịp nhanh — đặc biệt ở khối kinh doanh/kỹ thuật hiện trường.',
+        'HR thích người chăm chỉ, chịu khó, tinh thần phục vụ khách hàng.',
+        'Tinh thần đồng đội mạnh ở các chi nhánh tỉnh.',
+      ],
+      jobNature: [
+        'Khối kinh doanh: KPI rõ ràng, áp lực doanh số, thu nhập gắn hoa hồng hợp đồng.',
+        'Khối kỹ thuật: có thể trực ca, xử lý sự cố hạ tầng/Data Center 24/7.',
+        'Va chạm khách hàng nhiều, cơ hội thử thách thực tế nhanh.',
+      ],
+    },
     website: 'https://fpt.vn',
     lastUpdated: '2026-06-25',
     sources: [
@@ -247,6 +314,23 @@ export const COMPANIES: Company[] = [
       'Python', 'Machine Learning / Deep Learning', 'NLP', 'Computer Vision',
       'Cloud (OpenStack/Kubernetes)', 'MLOps', 'GPU computing', 'Go', 'Java',
     ],
+    insiderSecrets: {
+      interview: [
+        'Thiên kỹ thuật sâu: phỏng vấn về nền tảng ML/AI hoặc cloud, thường có bài test/coding.',
+        'Vòng hay rớt: chuyên môn khi thiếu nền tảng toán/ML hoặc không có project minh chứng.',
+        'Portfolio/dự án AI thực tế (GitHub, Kaggle) là lợi thế lớn.',
+      ],
+      culture: [
+        'Môi trường AI-first, trẻ, tốc độ — đề cao tự học và thử nghiệm; đậm tính sản phẩm/startup.',
+        'HR/leader thích người tò mò công nghệ, dám đề xuất và "làm được việc".',
+        'Cập nhật xu hướng mới (LLM, MLOps) được coi trọng.',
+      ],
+      jobNature: [
+        'Công nghệ thay đổi rất nhanh → phải học liên tục (LLM, MLOps, hạ tầng GPU).',
+        'Làm sản phẩm/nền tảng cho doanh nghiệp → cần tư duy giải pháp, không chỉ chạy mô hình.',
+        'Cơ hội tiếp xúc hạ tầng AI quy mô lớn (GPU cluster).',
+      ],
+    },
     website: 'https://fptcloud.com',
     lastUpdated: '2026-06-25',
     sources: [
@@ -287,6 +371,23 @@ export const COMPANIES: Company[] = [
         'Sinh viên Quản trị kinh doanh, Kinh tế, CNTT, Môi trường (cho mảng ESG) có tư duy phân tích và kỹ năng giao tiếp tốt.',
     },
     techStack: [],
+    insiderSecrets: {
+      interview: [
+        'Phong cách kiểu tư vấn: có tình huống/case, yêu cầu phân tích và trình bày logic.',
+        'Vòng hay rớt: khi không cấu trúc được câu trả lời hoặc thiếu tư duy kinh doanh.',
+        'Kỹ năng thuyết trình, tiếng Anh và sự tự tin được chú ý.',
+      ],
+      culture: [
+        'Môi trường tư vấn chuyên nghiệp, làm việc với lãnh đạo doanh nghiệp → tác phong chỉn chu.',
+        'HR đánh giá cao tư duy phản biện, ham học và thái độ cầu thị.',
+        'Đề cao chất lượng đầu ra, áp lực "chất xám" cao.',
+      ],
+      jobNature: [
+        'Làm theo dự án tư vấn → nhiều phân tích, slide, làm việc trực tiếp với khách cấp cao.',
+        'Cần kiến thức đa ngành & cập nhật xu hướng (chuyển đổi số, ESG).',
+        'Đi lại/họp khách nhiều, deadline theo mốc tư vấn.',
+      ],
+    },
     website: 'https://digital.fpt.com',
     lastUpdated: '2026-06-25',
     sources: [
@@ -330,6 +431,23 @@ export const COMPANIES: Company[] = [
       'Verilog / VHDL', 'EDA tools', 'Analog/Digital IC design',
       'Embedded C', 'IoT', 'Vi xử lý',
     ],
+    insiderSecrets: {
+      interview: [
+        'Phỏng vấn kỹ thuật sâu về điện tử số/tương tự, Verilog/VHDL, kiến trúc vi mạch.',
+        'Vòng hay rớt: chuyên môn khi nền tảng điện tử/thiết kế số chưa vững.',
+        'Đồ án/đề tài về IC, FPGA, embedded là điểm cộng rất lớn (ngành đang khát người).',
+      ],
+      culture: [
+        'Đội ngũ tinh gọn, deep-tech, tinh thần tiên phong "chip Make in Vietnam".',
+        'HR/leader thích người kiên trì, chịu khó nghiên cứu và học nhanh.',
+        'Team nhỏ nên cơ hội học sát chuyên gia rất nhiều.',
+      ],
+      jobNature: [
+        'Lĩnh vực mới & khó → đường học dốc, cần kiên nhẫn với chi tiết kỹ thuật.',
+        'Làm theo chuẩn ngành bán dẫn: tài liệu tiếng Anh, quy trình verify nghiêm ngặt.',
+        'Gắn với hệ sinh thái FPT (phối hợp FSoft, nguồn nhân lực từ ĐH FPT).',
+      ],
+    },
     website: 'https://fpt-is.com/semiconductor/',
     lastUpdated: '2026-06-25',
     sources: [
@@ -372,6 +490,23 @@ export const COMPANIES: Company[] = [
     techStack: [
       'E-commerce platform', 'ERP / POS', 'Data analytics', 'Web/Mobile (mảng số)',
     ],
+    insiderSecrets: {
+      interview: [
+        'Cửa hàng/sales: phỏng vấn thái độ, giao tiếp, chịu KPI; Long Châu cần bằng/chứng chỉ dược cho vị trí dược sĩ.',
+        'Vòng hay rớt: thiếu tinh thần phục vụ khách hàng hoặc ngại áp lực doanh số.',
+        'Khối công nghệ/e-commerce: phỏng vấn kỹ thuật như công ty IT.',
+      ],
+      culture: [
+        'Văn hóa bán lẻ tốc độ cao, kỷ luật vận hành, hướng khách hàng & con số.',
+        'HR thích người nhanh nhẹn, chịu khó, tinh thần dịch vụ.',
+        'Mở rộng nhanh → nhiều cơ hội thăng tiến nếu chịu được nhịp.',
+      ],
+      jobNature: [
+        'KPI doanh số rõ ràng; làm theo ca, cuối tuần/lễ là cao điểm bán hàng.',
+        'Long Châu: môi trường dược, cần cẩn thận và tư vấn đúng chuyên môn.',
+        'Mảng số (e-commerce/ERP): áp lực hệ thống phục vụ chuỗi cửa hàng lớn.',
+      ],
+    },
     website: 'https://frt.vn',
     lastUpdated: '2026-06-25',
     sources: [
@@ -414,6 +549,23 @@ export const COMPANIES: Company[] = [
     techStack: [
       'ERP', 'Supply chain system', 'Data analytics',
     ],
+    insiderSecrets: {
+      interview: [
+        'Kinh doanh/ngành hàng: phỏng vấn thái độ, quan hệ đối tác, chịu KPI; logistics: nghiệp vụ chuỗi cung ứng.',
+        'Vòng hay rớt: thiếu nhanh nhạy thương mại hoặc kỹ năng giao tiếp/đàm phán.',
+        'Hiểu thị trường sản phẩm công nghệ là điểm cộng.',
+      ],
+      culture: [
+        'Văn hóa thương mại, vận hành quy mô lớn, định hướng dịch vụ & tốc độ.',
+        'HR thích người chủ động, quan hệ tốt, chịu được nhịp phân phối.',
+        'Đề cao kết quả và độ tin cậy với đối tác/đại lý.',
+      ],
+      jobNature: [
+        'Làm với hãng công nghệ & mạng lưới đại lý → cần kỹ năng quan hệ và bám sát số liệu.',
+        'Áp lực tồn kho, doanh số và mùa vụ sản phẩm.',
+        'Cơ hội hiểu sâu chuỗi cung ứng ngành công nghệ.',
+      ],
+    },
     website: 'https://synnexfpt.com',
     lastUpdated: '2026-06-25',
     sources: [
@@ -456,6 +608,23 @@ export const COMPANIES: Company[] = [
     techStack: [
       'LMS / E-learning', 'Hệ thống quản lý đào tạo', 'Web nội bộ',
     ],
+    insiderSecrets: {
+      interview: [
+        'Giảng viên: thường có vòng dạy thử (demo) + phỏng vấn chuyên môn; vận hành/tuyển sinh: phỏng vấn thái độ & giao tiếp.',
+        'Vòng hay rớt: demo dạy khi thiếu kỹ năng truyền đạt/quản lý lớp.',
+        'Tình yêu nghề, hiểu sinh viên và kỹ năng sư phạm được đánh giá cao.',
+      ],
+      culture: [
+        'Môi trường giáo dục trẻ, năng động, gắn với doanh nghiệp; vẫn đậm tinh thần FPT.',
+        'HR thích người tận tâm với người học, chủ động và sáng tạo trong giảng dạy.',
+        'Đề cao trải nghiệm sinh viên và đổi mới phương pháp.',
+      ],
+      jobNature: [
+        'Lịch theo kỳ học, cao điểm vào mùa tuyển sinh/thi cử.',
+        'Giảng viên cần cập nhật kiến thức và gắn với thực tế nghề nghiệp.',
+        'Vai trò vận hành/tuyển sinh: tương tác nhiều với sinh viên và phụ huynh.',
+      ],
+    },
     website: 'https://fpt.edu.vn',
     lastUpdated: '2026-06-25',
     sources: [
@@ -498,6 +667,23 @@ export const COMPANIES: Company[] = [
     techStack: [
       'PHP / Java / Node.js', 'ReactJS', 'Big Data', 'Ad-tech', 'SEO',
     ],
+    insiderSecrets: {
+      interview: [
+        'Nội dung/biên tập: thường có bài test viết; công nghệ/ad-tech: phỏng vấn kỹ thuật như công ty IT.',
+        'Vòng hay rớt: bài test viết (với content) hoặc bài kỹ thuật (với dev) — đánh giá năng lực thật.',
+        'Nhạy tin tức và hiểu độc giả số là điểm cộng cho mảng nội dung.',
+      ],
+      culture: [
+        'Giao thoa media + công nghệ, nhịp rất nhanh theo dòng sự kiện.',
+        'HR thích người nhanh, chủ động, sáng tạo và chịu được áp lực tin nóng.',
+        'Đề cao chất lượng nội dung và khai thác dữ liệu người dùng.',
+      ],
+      jobNature: [
+        'Mảng nội dung: áp lực thời sự, có thể phải trực tin sự kiện lớn.',
+        'Mảng công nghệ/ad-tech: làm sản phẩm lưu lượng lớn, tối ưu hiệu năng & quảng cáo.',
+        'Mọi thứ đo bằng số liệu (traffic, doanh thu quảng cáo).',
+      ],
+    },
     website: 'https://vnexpress.net',
     lastUpdated: '2026-06-25',
     sources: [

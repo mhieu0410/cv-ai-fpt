@@ -193,6 +193,56 @@ export default async function CompanyDetailPage(
             </Section>
           )}
 
+          {/* ── FPT Insider Secrets ── */}
+          {company.insiderSecrets && (
+            <div className="bg-black border-4 border-black rounded-[2rem] p-6 md:p-8 shadow-[8px_8px_0_0_var(--fpt-orange)] relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-56 h-56 bg-[var(--fpt-orange)] rounded-full blur-[90px] opacity-20 pointer-events-none" />
+              <div className="relative z-10">
+                <div className="flex items-center gap-3 mb-1">
+                  <span className="text-2xl">🔓</span>
+                  <h2 className="text-xl md:text-2xl font-black text-white uppercase tracking-tight">
+                    FPT Insider Secrets
+                  </h2>
+                  <span className="text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded bg-[var(--fpt-orange)] text-white border border-white/20">
+                    Thực chiến
+                  </span>
+                </div>
+                <p className="text-zinc-400 text-sm font-semibold mb-6">
+                  Bí mật cô đọng giúp bạn chuẩn bị tốt hơn — không phải bản sao Wikipedia.
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {[
+                    { emoji: '🎤', title: 'Phỏng vấn ngầm', items: company.insiderSecrets.interview },
+                    { emoji: '🤝', title: 'Luật ngầm văn hóa STCo', items: company.insiderSecrets.culture },
+                    { emoji: '💼', title: 'Đặc thù công việc', items: company.insiderSecrets.jobNature },
+                  ].map((blk) => (
+                    <div
+                      key={blk.title}
+                      className="bg-white/5 border-2 border-white/15 rounded-2xl p-5 backdrop-blur-sm"
+                    >
+                      <h3 className="flex items-center gap-2 text-[13px] font-black uppercase tracking-widest text-yellow-400 mb-4">
+                        <span className="text-lg">{blk.emoji}</span> {blk.title}
+                      </h3>
+                      <ul className="space-y-3">
+                        {blk.items.map((it) => (
+                          <li key={it} className="flex items-start gap-2 text-[14px] font-medium text-zinc-200 leading-relaxed">
+                            <span className="mt-1.5 w-1.5 h-1.5 shrink-0 bg-[var(--fpt-orange)] rounded-full" />
+                            {it}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+
+                <p className="mt-6 text-[11px] text-zinc-500 font-medium leading-relaxed border-t border-white/10 pt-4">
+                  ⚠️ Đây là kinh nghiệm tham khảo từ cộng đồng, KHÔNG phải quy trình chính thức của công ty và có thể thay đổi theo thời điểm/vị trí.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Sources + last updated */}
           <div className="bg-zinc-100 border-2 border-zinc-300 rounded-2xl p-5">
             <p className="text-[11px] font-black uppercase tracking-widest text-zinc-500 mb-2">

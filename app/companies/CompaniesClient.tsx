@@ -121,7 +121,12 @@ export default function CompaniesClient() {
                     </div>
                   </div>
                   <p className="text-sm font-semibold text-zinc-600 leading-relaxed mb-4">{c.tagline}</p>
-                  <span className="inline-flex items-center gap-1 text-[13px] font-black uppercase tracking-widest text-[var(--fpt-orange)] group-hover:gap-2 transition-all">
+                  {c.insiderSecrets && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-black bg-yellow-300 border-2 border-black rounded px-2 py-0.5 shadow-[2px_2px_0_0_#000] mb-4">
+                      🔓 Insider Secrets
+                    </span>
+                  )}
+                  <span className="flex items-center gap-1 text-[13px] font-black uppercase tracking-widest text-[var(--fpt-orange)] group-hover:gap-2 transition-all">
                     Xem chi tiết →
                   </span>
                 </Link>
