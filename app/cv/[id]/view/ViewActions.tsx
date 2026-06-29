@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { pdf } from '@react-pdf/renderer'
+import { Pencil, Download, BarChart3, Target, Link2, Check } from 'lucide-react'
 import { getTemplate } from '@/components/cv-templates/registry'
 
 interface CvContent {
@@ -54,43 +55,37 @@ export default function ViewActions({ cvId, cvTitle, content, template, isPro }:
     }
   }
 
+  const base =
+    'inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60'
+  const secondary = `${base} border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900`
+  const primary = `${base} bg-[var(--fpt-orange)] text-white shadow-sm hover:brightness-95`
+
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <Link
-        href={`/cv/${cvId}/edit`}
-        className="flex items-center gap-1.5 px-3.5 py-2 text-sm text-zinc-300 hover:text-white border border-zinc-700 hover:border-zinc-500 rounded-lg transition-colors"
-      >
-        ✏️ Sửa
+      <Link href={`/cv/${cvId}/edit`} className={secondary}>
+        <Pencil className="h-4 w-4" /> Sửa
       </Link>
 
       <button
         type="button"
         onClick={() => handleDownload(template)}
         disabled={downloading !== null}
-        className="flex items-center gap-1.5 px-3.5 py-2 text-sm text-zinc-300 hover:text-white border border-zinc-700 hover:border-zinc-500 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className={primary}
       >
-        📥 {downloading === template ? 'Đang tạo...' : 'Tải PDF'}
+        <Download className="h-4 w-4" />
+        {downloading === template ? 'Đang tạo...' : 'Tải PDF'}
       </button>
 
-      <Link
-        href={`/cv/${cvId}/ats`}
-        className="flex items-center gap-1.5 px-3.5 py-2 text-sm text-emerald-400 hover:text-emerald-200 border border-emerald-800 hover:border-emerald-500 rounded-lg transition-colors"
-      >
-        📊 Điểm ATS
+      <Link href={`/cv/${cvId}/ats`} className={secondary}>
+        <BarChart3 className="h-4 w-4" /> Điểm ATS
       </Link>
-      <Link
-        href={`/cv/${cvId}/match`}
-        className="flex items-center gap-1.5 px-3.5 py-2 text-sm text-violet-400 hover:text-violet-200 border border-violet-800 hover:border-violet-500 rounded-lg transition-colors"
-      >
-        🎯 Match với JD
+      <Link href={`/cv/${cvId}/match`} className={secondary}>
+        <Target className="h-4 w-4" /> Match với JD
       </Link>
 
-      <button
-        type="button"
-        onClick={handleShare}
-        className="flex items-center gap-1.5 px-3.5 py-2 text-sm text-zinc-300 hover:text-white border border-zinc-700 hover:border-zinc-500 rounded-lg transition-colors"
-      >
-        {copied ? '✓ Đã copy link' : '🔗 Chia sẻ'}
+      <button type="button" onClick={handleShare} className={secondary}>
+        {copied ? <Check className="h-4 w-4 text-green-600" /> : <Link2 className="h-4 w-4" />}
+        {copied ? 'Đã copy link' : 'Chia sẻ'}
       </button>
     </div>
   )

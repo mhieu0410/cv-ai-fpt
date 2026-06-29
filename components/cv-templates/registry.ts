@@ -3,6 +3,9 @@ import { CLASSIC_META } from './classic/meta'
 import { MODERN_TECH_META } from './modern-tech/meta'
 import { BUSINESS_META } from './business/meta'
 import { CREATIVE_META } from './creative/meta'
+import { NEO_BRUTAL_META } from './neo-brutal/meta'
+import { GRADIENT_META } from './gradient/meta'
+import { SIDEBAR_META } from './sidebar/meta'
 import { DATA_SCIENCE_META } from './data-science/meta'
 import { ELEGANT_META } from './elegant/meta'
 import { CORPORATE_META } from './corporate/meta'
@@ -12,6 +15,9 @@ export const TEMPLATES: Record<string, TemplateMeta> = {
   'modern-tech': MODERN_TECH_META,
   business: BUSINESS_META,
   creative: CREATIVE_META,
+  'neo-brutal': NEO_BRUTAL_META,
+  gradient: GRADIENT_META,
+  sidebar: SIDEBAR_META,
   'data-science': DATA_SCIENCE_META,
   elegant: ELEGANT_META,
   corporate: CORPORATE_META,

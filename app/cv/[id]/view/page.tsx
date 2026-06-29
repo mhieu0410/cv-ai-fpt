@@ -1,10 +1,10 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import { ArrowLeft } from 'lucide-react'
 import AppNavbar from '@/components/AppNavbar'
-import TemplateSelector from '@/components/TemplateSelector'
 import { getUserPlan } from '@/lib/user-plan'
 import { createServerSupabase } from '@/lib/supabase-server'
-import ViewActions from './ViewActions'
+import CvStudio from './CvStudio'
 
 interface Education { school: string; major: string; year: string }
 interface Project   { name: string; description: string }
@@ -23,15 +23,6 @@ function formatDateTime(iso: string) {
     day: '2-digit', month: '2-digit', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
   })
-}
-
-function SectionCard({ heading, children }: { heading: string; children: React.ReactNode }) {
-  return (
-    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-      <h3 className="text-violet-400 font-semibold text-base mb-4">{heading}</h3>
-      {children}
-    </div>
-  )
 }
 
 export default async function ViewCvPage({
@@ -61,134 +52,33 @@ export default async function ViewCvPage({
     <>
       <AppNavbar />
 
-      <main className="min-h-screen bg-zinc-950 py-10 px-4">
-        <div className="max-w-3xl mx-auto">
-
-          {/* ── Page header ── */}
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
-            <div className="min-w-0">
-              <h1 className="text-white text-2xl font-bold leading-snug truncate">
-                {cv.title}
-              </h1>
-              <p className="text-zinc-500 text-sm mt-1">
-                Tạo lúc {formatDateTime(cv.created_at)}
-              </p>
-            </div>
-
-            <ViewActions
-              cvId={id}
-              cvTitle={cv.title}
-              content={content}
-              template={cv.template}
-              isPro={userIsPro}
-            />
-          </div>
-
-          {/* ── Chọn mẫu CV ── */}
-          <section className="mb-8">
-            <TemplateSelector
-              cvId={id}
-              currentTemplate={cv.template}
-              userIsPro={userIsPro}
-              data={content}
-            />
-          </section>
-
-          {/* ── Thông tin cá nhân ── */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-4">
-            <p className="text-white text-2xl font-bold mb-3">
-              {content.personal.name || <span className="text-zinc-600 italic">Chưa có tên</span>}
-            </p>
-            <div className="flex flex-col gap-1.5">
-              {content.personal.email && (
-                <span className="text-zinc-400 text-sm flex items-center gap-2">
-                  <span className="text-base" aria-hidden="true">📧</span>
-                  {content.personal.email}
-                </span>
-              )}
-              {content.personal.phone && (
-                <span className="text-zinc-400 text-sm flex items-center gap-2">
-                  <span className="text-base" aria-hidden="true">📞</span>
-                  {content.personal.phone}
-                </span>
-              )}
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-4">
-            {/* ── Học vấn ── */}
-            {content.education?.length > 0 && (
-              <SectionCard heading="🎓 Học vấn">
-                <ul className="flex flex-col gap-3">
-                  {content.education.map((edu, i) => (
-                    <li key={i} className="flex flex-col gap-0.5">
-                      <p className="text-white font-medium">{edu.school}</p>
-                      <p className="text-zinc-400 text-sm">
-                        {edu.major}
-                        {edu.year && <span className="text-zinc-600"> · {edu.year}</span>}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
-              </SectionCard>
-            )}
-
-            {/* ── Kỹ năng ── */}
-            {content.skills?.length > 0 && (
-              <SectionCard heading="💡 Kỹ năng">
-                <div className="flex flex-wrap gap-2">
-                  {content.skills.map((skill, i) => (
-                    <span
-                      key={i}
-                      className="px-3 py-1 bg-zinc-800 border border-zinc-700 text-zinc-300 text-sm rounded-full"
-                    >
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-              </SectionCard>
-            )}
-
-            {/* ── Dự án ── */}
-            {content.projects?.length > 0 && (
-              <SectionCard heading="🚀 Dự án">
-                <ul className="flex flex-col gap-5">
-                  {content.projects.map((proj, i) => (
-                    <li key={i}>
-                      <p className="text-white font-semibold mb-1">{proj.name}</p>
-                      <p className="text-zinc-400 text-sm leading-relaxed whitespace-pre-line">
-                        {proj.description}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
-              </SectionCard>
-            )}
-
-            {/* ── Hoạt động ── */}
-            {content.activities && content.activities.length > 0 && (
-              <SectionCard heading="🌟 Hoạt động">
-                <ul className="flex flex-col gap-2">
-                  {content.activities.map((act, i) => (
-                    <li key={i} className="text-zinc-300 text-sm leading-relaxed">
-                      {act.description}
-                    </li>
-                  ))}
-                </ul>
-              </SectionCard>
-            )}
-          </div>
-
-          {/* ── Footer ── */}
-          <div className="mt-10">
+      <main className="min-h-screen bg-white">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
+          {/* ── Header ── */}
+          <div className="mb-8">
             <Link
               href="/dashboard"
-              className="text-zinc-500 hover:text-white text-sm transition-colors"
+              className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-zinc-500 transition-colors hover:text-zinc-900"
             >
-              ← Quay về dashboard
+              <ArrowLeft className="h-4 w-4" />
+              Quay về dashboard
             </Link>
+            <h1 className="truncate text-2xl font-semibold tracking-tight text-zinc-900">
+              {cv.title}
+            </h1>
+            <p className="mt-1 text-sm text-zinc-500">
+              Cập nhật lúc {formatDateTime(cv.created_at)}
+            </p>
           </div>
 
+          {/* ── Studio: live preview + đổi mẫu + hành động ── */}
+          <CvStudio
+            cvId={id}
+            cvTitle={cv.title}
+            content={content}
+            initialTemplate={cv.template}
+            isPro={userIsPro}
+          />
         </div>
       </main>
     </>
