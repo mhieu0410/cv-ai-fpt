@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import AppNavbar from '@/components/AppNavbar'
 import MatchForm from '@/components/MatchForm'
 import { createServerSupabase } from '@/lib/supabase-server'
+import { getUserPlan } from '@/lib/user-plan'
 
 export default async function MatchPage({
   params,
@@ -23,10 +24,12 @@ export default async function MatchPage({
 
   if (!cv) redirect('/dashboard?error=cv_not_found')
 
+  const { isPro } = await getUserPlan(supabase, user.id)
+
   return (
     <>
       <AppNavbar />
-      <MatchForm cvId={cv.id} cvTitle={cv.title} cvContent={cv.content} />
+      <MatchForm cvId={cv.id} cvTitle={cv.title} cvContent={cv.content} isPro={isPro} />
     </>
   )
 }

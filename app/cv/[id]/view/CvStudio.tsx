@@ -217,8 +217,8 @@ export default function CvStudio({ cvId, cvTitle, content, initialTemplate, isPr
               </button>
             </div>
 
-            <div className="overflow-y-auto px-6 py-6">
-              <div className="flex flex-col gap-8">
+            <div data-lenis-prevent className="overflow-y-auto px-6 py-6 scroll-smooth">
+                <div className="flex flex-col gap-8">
                 {listTemplatesByCategory().map((group) => (
                   <section key={group.category}>
                     <div className="mb-4 flex items-baseline justify-between border-b border-zinc-200 pb-2">

@@ -7,6 +7,11 @@ import { computeAtsScore } from '@/lib/ats-score'
 import { motion } from 'framer-motion'
 import { getTemplate } from '@/components/cv-templates/registry'
 import { getUserPlan } from '@/lib/user-plan'
+import SkillSelector from '@/components/cv-editor/SkillSelector'
+import ProjectWizard from '@/components/cv-editor/ProjectWizard'
+import ActivityPicker from '@/components/cv-editor/ActivityPicker'
+import AchievementChecklist from '@/components/cv-editor/AchievementChecklist'
+import CompletionCoach from '@/components/cv-editor/CompletionCoach'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -269,12 +274,15 @@ export default function CvForm({ mode, initialData, cvId }: Props) {
   const [limitReached, setLimitReached] = useState(false)
   const [highlighted, setHighlighted] = useState('')
   const [isPro, setIsPro]             = useState(false)
+  const [wizardOpen, setWizardOpen]   = useState(false)
+  const [ideasOpen, setIdeasOpen]     = useState(false)
+  const [industryKey, setIndustryKey] = useState<string | null>(null)
 
   // ── Seed form state from initialData (edit) or blank (create) ─────────────
   const initEdu   = initialData?.content.education?.length  ? initialData.content.education  : [{ school: '', major: '', year: '' }]
-  const initSkills = initialData?.content.skills?.length    ? initialData.content.skills     : ['']
-  const initProjs  = initialData?.content.projects?.length  ? initialData.content.projects   : [{ name: '', description: '' }]
-  const initActs   = initialData?.content.activities?.length ? initialData.content.activities : [{ description: '' }]
+  const initSkills = initialData?.content.skills ?? []
+  const initProjs  = initialData?.content.projects ?? []
+  const initActs   = initialData?.content.activities ?? []
 
   const [title,      setTitle]      = useState(initialData?.title ?? '')
   const [personal,   setPersonal]   = useState(initialData?.content.personal ?? { name: '', email: '', phone: '' })
@@ -296,16 +304,6 @@ export default function CvForm({ mode, initialData, cvId }: Props) {
 
   // Độ hoàn thiện CV (ước tính ATS) — tính realtime từ state hiện tại
   const strength = computeAtsScore({ personal, education, skills, projects, activities }, title)
-  const strengthColor =
-    strength.level === 'excellent' ? '#10b981'
-    : strength.level === 'good' ? '#22c55e'
-    : strength.level === 'fair' ? '#f59e0b'
-    : '#ef4444'
-  const strengthLabel =
-    strength.level === 'excellent' ? 'Xuất sắc'
-    : strength.level === 'good' ? 'Tốt'
-    : strength.level === 'fair' ? 'Khá'
-    : 'Cần bổ sung'
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
@@ -326,9 +324,6 @@ export default function CvForm({ mode, initialData, cvId }: Props) {
   const touchEdu = (i: number, field: keyof EduTouched) =>
     setTouched(t => ({ ...t, education: t.education.map((e, idx) => idx === i ? { ...e, [field]: true } : e) }))
 
-  const touchSkill = (i: number) =>
-    setTouched(t => ({ ...t, skills: t.skills.map((s, idx) => idx === i ? true : s) }))
-
   const touchProject = (i: number, field: keyof ProjTouched) =>
     setTouched(t => ({ ...t, projects: t.projects.map((p, idx) => idx === i ? { ...p, [field]: true } : p) }))
 
@@ -347,17 +342,6 @@ export default function CvForm({ mode, initialData, cvId }: Props) {
   }
   const updateEducation = (i: number, field: keyof Education, val: string) =>
     setEducation(p => p.map((e, idx) => idx === i ? { ...e, [field]: val } : e))
-
-  const addSkill = () => {
-    setSkills(p => [...p, ''])
-    setTouched(t => ({ ...t, skills: [...t.skills, false] }))
-  }
-  const removeSkill = (i: number) => {
-    setSkills(p => p.filter((_, idx) => idx !== i))
-    setTouched(t => ({ ...t, skills: t.skills.filter((_, idx) => idx !== i) }))
-  }
-  const updateSkill = (i: number, val: string) =>
-    setSkills(p => p.map((s, idx) => idx === i ? val : s))
 
   const addProject = () => {
     setProjects(p => [...p, { name: '', description: '' }])
@@ -380,6 +364,20 @@ export default function CvForm({ mode, initialData, cvId }: Props) {
   }
   const updateActivity = (i: number, val: string) =>
     setActivities(p => p.map((a, idx) => idx === i ? { description: val } : a))
+
+  // ── Handlers cho wizard / pickers ─────────────────────────────────────────
+  const addProjectFromWizard = (proj: Project) => {
+    setProjects(p => [...p, proj])
+    setTouched(t => ({ ...t, projects: [...t.projects, { name: true, description: true }] }))
+  }
+  const addActivityText = (text: string) => {
+    setActivities(p => [...p, { description: text }])
+    setTouched(t => ({ ...t, activities: [...t.activities, true] }))
+  }
+  const addActivityTexts = (texts: string[]) => {
+    setActivities(p => [...p, ...texts.map(text => ({ description: text }))])
+    setTouched(t => ({ ...t, activities: [...t.activities, ...texts.map(() => true)] }))
+  }
 
   // ── Submit ────────────────────────────────────────────────────────────────
 
@@ -520,30 +518,20 @@ export default function CvForm({ mode, initialData, cvId }: Props) {
         </div>
       </header>
 
+      {/* Wizard tạo dự án (Feature 2) */}
+      <ProjectWizard open={wizardOpen} onClose={() => setWizardOpen(false)} onComplete={addProjectFromWizard} industryKey={industryKey} />
+
       {/* ── MAIN WORKSPACE ── */}
       <div className="flex-1 w-full flex overflow-hidden">
 
         {/* ── BÊN TRÁI: Form Nhập Liệu (Focus Mode) ── */}
-        <div className="w-full lg:w-[40%] flex flex-col h-full bg-[#f8f9fa] border-r-4 border-black z-10 relative">
+        <div className="w-full lg:w-[45%] xl:w-[42%] flex flex-col h-full bg-[#f8f9fa] border-r-4 border-black z-10 relative">
 
         {/* Form Body */}
-        <div className="flex-1 overflow-y-auto p-6 lg:p-10 scroll-smooth pb-32">
+        <div data-lenis-prevent className="flex-1 overflow-y-auto p-6 lg:p-10 scroll-smooth pb-32">
           <div className="max-w-[600px] mx-auto">
-            {/* Thanh độ hoàn thiện CV (live ATS preview) */}
-            <div className="mb-12 bg-white border-4 border-black rounded-[2rem] px-8 py-6 shadow-[8px_8px_0_0_#000] flex flex-col gap-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-[12px_12px_0_0_#000]">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-zinc-500 font-black uppercase tracking-[0.15em]">Độ hoàn thiện CV (ước tính ATS)</span>
-                <span className="text-[13px] font-black px-4 py-1.5 bg-zinc-50 rounded-xl border-2 border-black shadow-[2px_2px_0_0_#000]" style={{ color: strengthColor }}>
-                  {strength.score}/100 · {strengthLabel}
-                </span>
-              </div>
-              <div className="h-4 border-2 border-black rounded-full bg-zinc-100 overflow-hidden relative">
-                <div
-                  className="h-full border-r-2 border-black transition-all duration-500"
-                  style={{ width: `${strength.score}%`, background: strengthColor }}
-                />
-              </div>
-            </div>
+            {/* Trợ lý hoàn thiện CV (Feature 7) */}
+            <CompletionCoach result={strength} />
 
             {/* ── Thông tin cá nhân ── */}
             <section className="mb-12">
@@ -636,36 +624,40 @@ export default function CvForm({ mode, initialData, cvId }: Props) {
               </div>
             </section>
 
-            {/* ── Kỹ năng ── */}
+            {/* ── Kỹ năng (Feature 1: chip selector) ── */}
             <section className="mb-10">
-              <SectionHeader title="Kỹ năng" onAdd={addSkill} index="03" />
-              <div className="flex flex-col gap-3">
-                {skills.map((skill, i) => (
-                  <div key={i}>
-                    <div className="flex items-center gap-3">
-                      <input
-                        id={`field-skill-${i}`} type="text" value={skill}
-                        onChange={e => updateSkill(i, e.target.value)}
-                        onBlur={() => touchSkill(i)}
-                        placeholder="VD: React, TypeScript, Tiếng Anh Ielts 7.0..."
-                        className={fieldCls('', !!touched.skills[i] && !!errors.skills[i], hi === `field-skill-${i}`)}
-                      />
-                      {skills.length > 1 && (
-                        <button type="button" onClick={() => removeSkill(i)}
-                          className="text-black hover:text-white bg-white border-2 border-black shadow-[2px_2px_0_0_#000] hover:bg-red-500 hover:shadow-none hover:translate-y-0.5 rounded-xl p-3 transition-all shrink-0">
-                          <svg className="w-5 h-5 stroke-[3px]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                        </button>
-                      )}
-                    </div>
-                    {touched.skills[i] && <ErrMsg msg={errors.skills[i] ?? ''} />}
-                  </div>
-                ))}
-              </div>
+              <h2 className="text-zinc-900 font-black text-2xl tracking-tighter uppercase mb-4 flex items-center gap-3">
+                <span className="text-[var(--fpt-orange)] px-2 bg-yellow-300 border-2 border-black shadow-[2px_2px_0_0_#000] rounded">03.</span> Kỹ năng
+              </h2>
+              <SkillSelector value={skills} onChange={setSkills} industryKey={industryKey} onIndustryChange={setIndustryKey} />
             </section>
 
-            {/* ── Dự án ── */}
+            {/* ── Dự án (Feature 2+6: wizard) ── */}
             <section className="mb-10">
-              <SectionHeader title="Dự án / Project" onAdd={addProject} index="04" />
+              <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                <h2 className="text-zinc-900 font-black text-2xl tracking-tighter uppercase flex items-center gap-3">
+                  <span className="text-[var(--fpt-orange)] px-2 bg-yellow-300 border-2 border-black shadow-[2px_2px_0_0_#000] rounded">04.</span> Dự án
+                </h2>
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => setWizardOpen(true)} className="text-[12px] font-black uppercase tracking-widest bg-[var(--fpt-orange)] border-2 border-black text-white px-4 py-2 rounded-xl shadow-[2px_2px_0_0_#000] hover:-translate-y-0.5 active:translate-y-0 active:shadow-none transition-all">
+                    🚀 Dùng trợ lý
+                  </button>
+                  <button type="button" onClick={addProject} className="text-[12px] font-black uppercase tracking-widest bg-white border-2 border-black text-black px-4 py-2 rounded-xl shadow-[2px_2px_0_0_#000] hover:-translate-y-0.5 active:translate-y-0 active:shadow-none transition-all">
+                    + Thủ công
+                  </button>
+                </div>
+              </div>
+              {projects.length === 0 && (
+                <button
+                  type="button"
+                  onClick={() => setWizardOpen(true)}
+                  className="mb-6 w-full rounded-[2rem] border-4 border-dashed border-zinc-300 bg-white p-8 text-center transition-all hover:-translate-y-1 hover:border-black hover:shadow-[8px_8px_0_0_#000]"
+                >
+                  <p className="mb-2 text-3xl">🚀</p>
+                  <p className="font-black text-zinc-700">Chưa có dự án nào</p>
+                  <p className="mt-1 text-sm font-bold text-zinc-400">Bấm để dùng trợ lý — trả lời vài câu, hệ thống tự viết mô tả cho bạn.</p>
+                </button>
+              )}
               <div className="flex flex-col gap-6">
                 {projects.map((project, i) => (
                   <div key={i} className="bg-white border-4 border-black shadow-[8px_8px_0_0_#000] rounded-[2.5rem] p-8 md:p-10 relative transition-all duration-500 focus-within:-translate-y-1 focus-within:shadow-[12px_12px_0_0_#000]">
@@ -701,9 +693,41 @@ export default function CvForm({ mode, initialData, cvId }: Props) {
               </div>
             </section>
 
-            {/* ── Hoạt động ── */}
+            {/* ── Hoạt động & Thành tích (Feature 3+4) ── */}
             <section className="mb-10">
-              <SectionHeader title="Hoạt động ngoại khóa / CLB" onAdd={addActivity} index="05" />
+              <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                <h2 className="text-zinc-900 font-black text-2xl tracking-tighter uppercase flex items-center gap-3">
+                  <span className="text-[var(--fpt-orange)] px-2 bg-yellow-300 border-2 border-black shadow-[2px_2px_0_0_#000] rounded">05.</span> Hoạt động &amp; Thành tích
+                </h2>
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => setIdeasOpen(o => !o)} className="text-[12px] font-black uppercase tracking-widest bg-[var(--fpt-orange)] border-2 border-black text-white px-4 py-2 rounded-xl shadow-[2px_2px_0_0_#000] hover:-translate-y-0.5 active:translate-y-0 active:shadow-none transition-all">
+                    💡 Gợi ý
+                  </button>
+                  <button type="button" onClick={addActivity} className="text-[12px] font-black uppercase tracking-widest bg-white border-2 border-black text-black px-4 py-2 rounded-xl shadow-[2px_2px_0_0_#000] hover:-translate-y-0.5 active:translate-y-0 active:shadow-none transition-all">
+                    + Thủ công
+                  </button>
+                </div>
+              </div>
+
+              {ideasOpen && (
+                <div className="mb-6 flex flex-col gap-4">
+                  <ActivityPicker onAdd={addActivityText} />
+                  <AchievementChecklist onAdd={addActivityTexts} />
+                </div>
+              )}
+
+              {activities.length === 0 && !ideasOpen && (
+                <button
+                  type="button"
+                  onClick={() => setIdeasOpen(true)}
+                  className="mb-4 w-full rounded-2xl border-4 border-dashed border-zinc-300 bg-white p-6 text-center transition-all hover:-translate-y-0.5 hover:border-black hover:shadow-[6px_6px_0_0_#000]"
+                >
+                  <p className="mb-1 text-2xl">💡</p>
+                  <p className="font-black text-zinc-700">Chưa có hoạt động nào</p>
+                  <p className="mt-1 text-sm font-bold text-zinc-400">Bấm để xem gợi ý: CLB, tình nguyện, cuộc thi, thành tích...</p>
+                </button>
+              )}
+
               <div className="flex flex-col gap-3">
                 {activities.map((activity, i) => (
                   <div key={i} className="flex flex-col gap-1">
@@ -741,12 +765,12 @@ export default function CvForm({ mode, initialData, cvId }: Props) {
       </div>
 
       {/* ── BÊN PHẢI: Live Preview ── */}
-      <div className="hidden lg:flex lg:w-[60%] h-full bg-zinc-900 items-center justify-center p-8 overflow-y-auto relative border-l-4 border-black">
+      <div data-lenis-prevent className="hidden lg:flex lg:w-[55%] xl:w-[58%] h-full bg-zinc-900 justify-center items-start p-8 xl:p-12 overflow-y-auto relative border-l-4 border-black">
         {/* Subtle grid pattern background */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
-        <div className="w-full max-w-[800px] mt-4 relative z-10 flex justify-center items-center">
-           {/* Render Live Preview with huge shadow and tilt */}
-           <div className="bg-white border border-zinc-200 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8)] rounded-sm overflow-hidden pointer-events-none scale-90 md:scale-95 lg:scale-100 origin-center transition-transform duration-500 hover:scale-[1.02]">
+        <div className="relative z-10 w-full max-w-[620px] xl:max-w-[680px]">
+           {/* Render Live Preview như một trang giấy trên canvas */}
+           <div className="bg-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8)] rounded-md overflow-hidden pointer-events-none ring-1 ring-black/5">
              <Preview data={contentPreview} />
            </div>
         </div>
